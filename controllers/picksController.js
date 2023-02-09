@@ -335,9 +335,11 @@ const calculateTotalBracketPoints = async (req, res) => {
 };
 
 const getTotalBracketPoints = async (req, res) => {
-  const { userId } = req.user;
+  const { email } = req.query;
 
-  const user = await User.findOne({ _id: userId }).lean();
+  console.log("hey");
+
+  const user = await User.findOne({ email }).lean();
 
   if (!user) {
     throw new NotFoundError("User does not exist!");

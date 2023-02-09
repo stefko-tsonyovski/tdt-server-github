@@ -23,7 +23,7 @@ router
 
 router
   .route("/calculateTotal")
-  .get(authenticateUser, getTotalBracketPoints)
+  .get(getTotalBracketPoints)
   .patch(authenticateUser, calculateTotalBracketPoints);
 
 router.route("/verify/:bracketId").patch(authenticateUser, verifyPick);

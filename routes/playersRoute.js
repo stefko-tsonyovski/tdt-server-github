@@ -63,7 +63,7 @@ router
 
 router
   .route("/calculateTotal")
-  .get(authenticateUser, getTotalPoints)
+  .get(getTotalPoints)
   .patch(authenticateUser, calculateTotalPoints);
 
 router.route("/calculateTotal").patch(authenticateUser, calculateTotalPoints);

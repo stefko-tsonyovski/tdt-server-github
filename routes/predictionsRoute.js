@@ -34,7 +34,7 @@ router
 router
   .route("/")
   .post(authenticateUser, createPrediction)
-  .get(authenticateUser, getTotalPredictionPoints);
+  .get(getTotalPredictionPoints);
 
 router
   .route("/approve/:id")
