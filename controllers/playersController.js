@@ -763,9 +763,9 @@ const getWeeklyPoints = async (req, res) => {
 };
 
 const getTotalPoints = async (req, res) => {
-  const { userId } = req.user;
+  const { email } = req.query;
 
-  const user = await User.findOne({ _id: userId }).lean();
+  const user = await User.findOne({ email }).lean();
 
   if (!user) {
     throw new NotFoundError("User does not exist!");
