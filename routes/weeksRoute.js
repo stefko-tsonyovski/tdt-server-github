@@ -18,12 +18,12 @@ const {
 
 router
   .route("/")
-  .get(authenticateUser, getAllWeeks)
+  .get(getAllWeeks)
   .post(authenticateUser, authorizePermissions("admin", "owner"), createWeek);
 
-router.route("/byCurrentDate").get(authenticateUser, getWeekByCurrentDate);
+router.route("/byCurrentDate").get(getWeekByCurrentDate);
 
-router.route("/countdown").get(authenticateUser, getCountdown);
+router.route("/countdown").get(getCountdown);
 
 router
   .route("/:id")

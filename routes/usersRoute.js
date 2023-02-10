@@ -20,7 +20,7 @@ router.route("/showMe").get(authenticateUser, getCurrentUserPosition);
 router.route("/teamByUser").get(authenticateUser, getTeamByUserAndByWeek);
 router.route("/weekly").get(authenticateUser, getWeeklyPointsByUser);
 router.route("/total").get(authenticateUser, getTotalPointsByUser);
-router.route("/trades").get(authenticateUser, getTradesByUser);
+router.route("/trades").get(getTradesByUser);
 router.route("/byLeague/:leagueId").get(authenticateUser, getUsersByLeague);
 router.route("/:id").get(authenticateUser, getUser);
 
