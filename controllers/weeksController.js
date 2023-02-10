@@ -37,7 +37,7 @@ const getWeek = async (req, res) => {
 
 const getCountdown = async (req, res) => {
   const { weekId } = req.query;
-  console.log(weekId);
+
   const week = await Week.findOne({ _id: weekId });
   if (!week) {
     throw new NotFoundError("Week does not exist!");
