@@ -64,14 +64,20 @@ const getAll = async (req, res) => {
 };
 
 const getAllPlayers = async (req, res) => {
-  const { playerSearchItem, isBought, selected, page, itemsPerPage } = req.body;
+  const { playerSearchTerm, isBought, selected, page, itemsPerPage, email } =
+    req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
 
   let players = await Player.find({}).sort("ranking").lean();
   players = players.slice(0, 100);
 
   const userPlayers = await UserPlayer.find({
     weekId: selected.value,
-    userId: req.user.userId,
+    userId: user._id,
   }).lean();
   let boughtPlayers = [];
 
@@ -84,9 +90,9 @@ const getAllPlayers = async (req, res) => {
     players = boughtPlayers;
   }
 
-  if (playerSearchItem) {
+  if (playerSearchTerm) {
     players = players.filter((p) =>
-      p.name.toLowerCase().includes(playerSearchItem.toLowerCase())
+      p.name.toLowerCase().includes(playerSearchTerm.toLowerCase())
     );
   }
 
