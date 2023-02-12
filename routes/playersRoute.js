@@ -30,7 +30,7 @@ const {
 
 router
   .route("/")
-  .post(authenticateUser, getAllPlayers)
+  .post(getAllPlayers)
   .get(getAll)
   .patch(
     authenticateUser,
