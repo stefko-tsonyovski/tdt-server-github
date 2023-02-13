@@ -42,17 +42,14 @@ router
   .route("/create")
   .post(authenticateUser, authorizePermissions("admin", "owner"), createPlayer);
 
-router
-  .route("/team")
-  .post(authenticateUser, getAllPlayersInTeam)
-  .delete(authenticateUser, deletePlayerInTeam);
+router.route("/team").post(getAllPlayersInTeam).delete(deletePlayerInTeam);
 
 router
   .route("/substitutions")
   .post(authenticateUser, getAllSubstitutionsInTeam)
   .patch(authenticateUser, performSubstitution);
 
-router.route("/add").post(authenticateUser, addPlayerInTeam);
+router.route("/add").post(addPlayerInTeam);
 router.route("/addBall").patch(authenticateUser, addBallToUserPlayer);
 router.route("/deleteBall").patch(authenticateUser, deleteBallFromUserPlayer);
 

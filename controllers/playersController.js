@@ -107,11 +107,17 @@ const getAllPlayers = async (req, res) => {
 
 const getAllPlayersInTeam = async (req, res) => {
   const { selected } = req.body;
+  const { email } = req.query;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
 
   let players = await Player.find({}).sort("ranking").lean();
   const userPlayers = await UserPlayer.find({
     weekId: selected.value,
-    userId: req.user.userId,
+    userId: user._id,
     isSubstitution: false,
   }).lean();
 
@@ -238,8 +244,14 @@ const getSinglePlayerMatches = async (req, res) => {
 };
 
 const addPlayerInTeam = async (req, res) => {
-  const { playerId, weekId } = req.body;
-  const { userId } = req.user;
+  const { playerId, weekId, email } = req.body;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const week = await Week.findOne({ _id: weekId }).lean();
 
@@ -370,8 +382,14 @@ const performSubstitution = async (req, res) => {
 };
 
 const deletePlayerInTeam = async (req, res) => {
-  const { playerId, weekId } = req.query;
-  const { userId } = req.user;
+  const { playerId, weekId, email } = req.query;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const week = await Week.findOne({ _id: weekId }).lean();
 
@@ -412,12 +430,6 @@ const deletePlayerInTeam = async (req, res) => {
     },
     { runValidators: true }
   );
-
-  const user = await User.findOne({ _id: userId }).lean();
-
-  if (!user) {
-    throw new NotFoundError("User does not exist!");
-  }
 
   await User.findOneAndUpdate(
     { _id: userId },
