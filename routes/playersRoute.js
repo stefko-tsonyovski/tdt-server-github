@@ -55,13 +55,10 @@ router.route("/deleteBall").patch(deleteBallFromUserPlayer);
 
 router
   .route("/calculateWeekly")
-  .get(authenticateUser, getWeeklyPoints)
-  .patch(authenticateUser, calculatePointsForUserPlayers);
+  .get(getWeeklyPoints)
+  .patch(calculatePointsForUserPlayers);
 
-router
-  .route("/calculateTotal")
-  .get(getTotalPoints)
-  .patch(authenticateUser, calculateTotalPoints);
+router.route("/calculateTotal").get(getTotalPoints).patch(calculateTotalPoints);
 
 router.route("/calculateTotal").patch(authenticateUser, calculateTotalPoints);
 router.route("/:id").get(authenticateUser, getSinglePlayer);

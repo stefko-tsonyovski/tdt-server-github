@@ -98,9 +98,9 @@ const getAllPlayers = async (req, res) => {
 
   const totalItems = players.length;
 
-  const start = (page - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  players = players.slice(start, end);
+  // const start = (page - 1) * itemsPerPage;
+  // const end = start + itemsPerPage;
+  // players = players.slice(start, end);
 
   res.status(StatusCodes.OK).json({ players, totalItems });
 };
@@ -575,8 +575,14 @@ const deleteBallFromUserPlayer = async (req, res) => {
 };
 
 const calculatePointsForUserPlayers = async (req, res) => {
-  const { weekId } = req.body;
-  const { userId } = req.user;
+  const { weekId, email } = req.body;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const week = await Week.findOne({ _id: weekId }).lean();
 
@@ -756,7 +762,14 @@ const calculatePointsForUserPlayers = async (req, res) => {
 };
 
 const calculateTotalPoints = async (req, res) => {
-  const { userId } = req.user;
+  const { email } = req.query;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const userPlayers = await UserPlayer.find({
     userId,
