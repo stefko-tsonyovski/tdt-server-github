@@ -441,8 +441,14 @@ const deletePlayerInTeam = async (req, res) => {
 };
 
 const addBallToUserPlayer = async (req, res) => {
-  const { playerId, weekId } = req.body;
-  const { userId } = req.user;
+  const { playerId, weekId, email } = req.body;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const week = await Week.findOne({ _id: weekId }).lean();
 
@@ -501,8 +507,14 @@ const addBallToUserPlayer = async (req, res) => {
 };
 
 const deleteBallFromUserPlayer = async (req, res) => {
-  const { playerId, weekId } = req.body;
-  const { userId } = req.user;
+  const { playerId, weekId, email } = req.body;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const week = await Week.findOne({ _id: weekId }).lean();
 

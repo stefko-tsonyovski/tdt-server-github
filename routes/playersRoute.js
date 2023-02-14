@@ -50,8 +50,8 @@ router
   .patch(authenticateUser, performSubstitution);
 
 router.route("/add").post(addPlayerInTeam);
-router.route("/addBall").patch(authenticateUser, addBallToUserPlayer);
-router.route("/deleteBall").patch(authenticateUser, deleteBallFromUserPlayer);
+router.route("/addBall").patch(addBallToUserPlayer);
+router.route("/deleteBall").patch(deleteBallFromUserPlayer);
 
 router
   .route("/calculateWeekly")
