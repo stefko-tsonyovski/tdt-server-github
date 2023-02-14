@@ -11,6 +11,7 @@ const Match = require("./models/Match");
 const User = require("./models/User");
 const UserPlayer = require("./models/UserPlayer");
 const UserWeek = require("./models/UserWeek");
+const Week = require("./models/Week");
 
 const express = require("express");
 const app = express();
@@ -292,6 +293,19 @@ const updateUsers = async () => {
   await User.updateMany({}, { $set: { predictionPoints: 100, trades: 60 } });
 };
 
+const updateWeeks = async () => {
+  const weeks = await Week.find({});
+
+  for (let i = 0; i < weeks.length; i++) {
+    const week = weeks[i];
+    await Week.findOneAndUpdate(
+      { _id: week._id },
+      { from: week.from + "T00:00:00", to: week.to + "T23:59:59" },
+      { runValidators: true }
+    );
+  }
+};
+
 const addImagesToPlayers = async () => {
   const dbPlayers = await Player.find({}).sort("ranking");
   const absolutePath = path.join(__dirname, "ranking.json");
@@ -411,6 +425,9 @@ const start = async () => {
 
     // Update user players
     // await updateUserPlayers();
+
+    // Update weeks
+    // await updateWeeks();
 
     console.log("Seeding successful!");
   } catch (error) {
