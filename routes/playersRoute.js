@@ -46,8 +46,8 @@ router.route("/team").post(getAllPlayersInTeam).delete(deletePlayerInTeam);
 
 router
   .route("/substitutions")
-  .post(authenticateUser, getAllSubstitutionsInTeam)
-  .patch(authenticateUser, performSubstitution);
+  .post(getAllSubstitutionsInTeam)
+  .patch(performSubstitution);
 
 router.route("/add").post(addPlayerInTeam);
 router.route("/addBall").patch(addBallToUserPlayer);

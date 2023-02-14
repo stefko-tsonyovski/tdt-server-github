@@ -147,11 +147,17 @@ const getAllPlayersInTeam = async (req, res) => {
 
 const getAllSubstitutionsInTeam = async (req, res) => {
   const { selected } = req.body;
+  const { email } = req.query;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
 
   let players = await Player.find({}).sort("ranking").lean();
   const userPlayers = await UserPlayer.find({
     weekId: selected.value,
-    userId: req.user.userId,
+    userId: user._id,
     isSubstitution: true,
   }).lean();
 
@@ -323,13 +329,14 @@ const addPlayerInTeam = async (req, res) => {
 };
 
 const performSubstitution = async (req, res) => {
-  const { substitutionId, starterId, weekId } = req.body;
-  const { userId } = req.user;
+  const { substitutionId, starterId, weekId, email } = req.body;
 
-  const user = await User.findOne({ _id: userId }).lean();
+  const user = await User.findOne({ email }).lean();
   if (!user) {
     throw new NotFoundError("User does not exist!");
   }
+
+  const { _id: userId } = user;
 
   if (user.trades <= 0) {
     throw new BadRequestError("You don't have trades anymore!");
