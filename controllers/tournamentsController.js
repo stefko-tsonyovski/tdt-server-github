@@ -4,6 +4,7 @@ const Tournament = require("../models/Tournament");
 const Match = require("../models/Match");
 const Favorite = require("../models/Favorite");
 const { BadRequestError } = require("../errors");
+const User = require("../models/User");
 
 const getTournaments = async (req, res) => {
   let tournaments = await Tournament.find({}).sort({ city: "asc" }).lean();
@@ -35,19 +36,19 @@ const getTournaments = async (req, res) => {
 };
 
 const getTournamentsByDate = async (req, res) => {
-  const { date } = req.params;
-  const { userId } = req.user;
+  const { date, email } = req.query;
+  // const { userId } = req.user;
   let tournaments = await Tournament.find({}).sort({ city: "asc" }).lean();
   const countries = await Country.find({}).lean();
   const matches = await Match.find({}).lean();
-  const favorites = await Favorite.find({ userId }).lean();
+  const user = await User.findOne({ email }).lean();
+  const favorites = await Favorite.find({ userId: user?._id }).lean();
 
   tournaments = tournaments
     .filter((t) => {
       const startDate = new Date(t.startDate);
       const endDate = new Date(t.endDate);
       const parsedDate = new Date(date);
-
       return parsedDate >= startDate && parsedDate <= endDate;
     })
     .map((t) => {
@@ -61,14 +62,13 @@ const getTournamentsByDate = async (req, res) => {
         .filter((m) => {
           const parsedDate = new Date(date).toLocaleDateString("en-CA");
           const matchDate = new Date(m.date).toLocaleDateString("en-CA");
-
           return parsedDate === matchDate && t.id === m.tournamentId;
         })
         .map((match) => {
           if (
             favorites.some(
               (favorite) =>
-                favorite.matchId === match.id && favorite.userId === userId
+                favorite.matchId === match.id && favorite.userId === user._id
             )
           ) {
             favoritesCount++;
@@ -96,6 +96,7 @@ const getTournamentsByDate = async (req, res) => {
       return t;
     });
 
+  console.log(tournaments);
   res.status(StatusCodes.OK).json({ tournaments });
 };
 
