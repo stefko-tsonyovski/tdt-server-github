@@ -25,8 +25,14 @@ const havePickBeenMade = async (req, res) => {
 
 const getAllByUserAndByTournament = async (req, res) => {
   const { tournamentId } = req.params;
-  const { roundId } = req.query;
-  const { userId } = req.user;
+  const { roundId, email } = req.query;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const bracketsByTournament = await Bracket.find({
     tournamentId: Number(tournamentId),
@@ -293,8 +299,14 @@ const calculateWeeklyBracketPoints = async (req, res) => {
 };
 
 const getWeeklyBracketPoints = async (req, res) => {
-  const { weekId } = req.query;
-  const { userId } = req.user;
+  const { weekId, email } = req.query;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const userWeek = await UserWeek.findOne({ userId, weekId }).lean();
 
@@ -308,7 +320,14 @@ const getWeeklyBracketPoints = async (req, res) => {
 };
 
 const calculateTotalBracketPoints = async (req, res) => {
-  const { userId } = req.user;
+  const { email } = req.query;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const currentDate = new Date();
   const userWeeks = await UserWeek.find({ userId }).lean();

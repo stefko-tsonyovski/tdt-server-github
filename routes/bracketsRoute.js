@@ -30,7 +30,7 @@ router
 
 router
   .route("/byTournamentAndRound")
-  .get(authenticateUser, getAllBracketsByTournamentIdAndRoundId);
+  .get(getAllBracketsByTournamentIdAndRoundId);
 
 router
   .route("/:id")
