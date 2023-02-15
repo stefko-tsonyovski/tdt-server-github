@@ -23,7 +23,7 @@ router
     createTournament
   );
 
-router.route("/byDate/:date").get(authenticateUser, getTournamentsByDate);
+router.route("/byDate").get(getTournamentsByDate);
 
 router.route("/byWeek").get(getTournamentsByWeek);
 
