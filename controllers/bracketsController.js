@@ -53,6 +53,8 @@ const getAllBracketsByTournamentIdAndRoundId = async (req, res) => {
     resultBrackets.push(finalBracket);
   }
 
+  console.log(resultBrackets);
+
   res.status(StatusCodes.OK).json({ brackets: resultBrackets, totalItems });
 };
 

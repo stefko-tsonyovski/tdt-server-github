@@ -18,17 +18,15 @@ router.route("/").post(authenticateUser, createPick);
 
 router
   .route("/calculateWeekly")
-  .get(authenticateUser, getWeeklyBracketPoints)
+  .get(getWeeklyBracketPoints)
   .patch(authenticateUser, calculateWeeklyBracketPoints);
 
 router
   .route("/calculateTotal")
   .get(getTotalBracketPoints)
-  .patch(authenticateUser, calculateTotalBracketPoints);
+  .patch(calculateTotalBracketPoints);
 
 router.route("/verify/:bracketId").patch(authenticateUser, verifyPick);
-router
-  .route("/byTournament/:tournamentId")
-  .get(authenticateUser, getAllByUserAndByTournament);
+router.route("/byTournament/:tournamentId").get(getAllByUserAndByTournament);
 
 module.exports = router;

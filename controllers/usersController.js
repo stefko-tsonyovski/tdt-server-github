@@ -377,6 +377,17 @@ const getTradesByUser = async (req, res) => {
   res.status(StatusCodes.OK).json({ trades: user.trades });
 };
 
+const getUserByEmail = async (req, res) => {
+  const { email } = req.params;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  res.status(StatusCodes.OK).json({ ...user });
+};
+
 module.exports = {
   getAllUsers,
   getTop200Users,
@@ -387,4 +398,5 @@ module.exports = {
   getTotalPointsByUser,
   getTradesByUser,
   getUser,
+  getUserByEmail,
 };

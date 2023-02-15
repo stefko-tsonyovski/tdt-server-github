@@ -25,7 +25,7 @@ router
 
 router.route("/byDate/:date").get(authenticateUser, getTournamentsByDate);
 
-router.route("/byWeek").get(authenticateUser, getTournamentsByWeek);
+router.route("/byWeek").get(getTournamentsByWeek);
 
 router.route("/:id").get(authenticateUser, getSingleTournament);
 
