@@ -14,7 +14,7 @@ const {
 } = require("../controllers/picksController");
 
 router.route("/haveBeenMade").get(authenticateUser, havePickBeenMade);
-router.route("/").post(authenticateUser, createPick);
+router.route("/").post(createPick);
 
 router
   .route("/calculateWeekly")
@@ -26,7 +26,7 @@ router
   .get(getTotalBracketPoints)
   .patch(calculateTotalBracketPoints);
 
-router.route("/verify/:bracketId").patch(authenticateUser, verifyPick);
+router.route("/verify/:bracketId").patch(verifyPick);
 router.route("/byTournament/:tournamentId").get(getAllByUserAndByTournament);
 
 module.exports = router;
