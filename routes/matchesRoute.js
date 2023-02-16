@@ -18,31 +18,31 @@ const {
   authorizePermissions,
 } = require("../middleware/authentication");
 
-router.route("/lastH2HByPlayer").post(authenticateUser, getLastMatchesByPlayer);
-router.route("/lastByPlayer").post(authenticateUser, getLastMatchesByPlayer);
+router.route("/lastH2HByPlayer").post(getLastMatchesByPlayer);
+router.route("/lastByPlayer").post(getLastMatchesByPlayer);
 router
   .route("/")
-  .post(authenticateUser, authorizePermissions("admin", "owner"), createMatch);
+  .post(authorizePermissions("admin", "owner"), createMatch);
 
 router
   .route("/byTournamentAndRound")
-  .get(authenticateUser, getMatchesByTournamentIdAndRoundId);
+  .get(getMatchesByTournamentIdAndRoundId);
 
 router
   .route("/byTournamentGroupByRound")
-  .get(authenticateUser, getMatchesByTournamentIdGroupedByRoundId);
+  .get(getMatchesByTournamentIdGroupedByRoundId);
 router
   .route("/byTournamentAndDate")
-  .get(authenticateUser, getMatchesByTournamentIdAndDate);
+  .get(getMatchesByTournamentIdAndDate);
 router
   .route("/byPlayerGroupByTournament")
-  .get(authenticateUser, getMatchesByPlayerGroupedByTournamentId);
+  .get(getMatchesByPlayerGroupedByTournamentId);
 
 router
   .route("/:id")
-  .get(authenticateUser, getSingleMatch)
-  .patch(authenticateUser, authorizePermissions("admin", "owner"), updateMatch);
+  .get(getSingleMatch)
+  .patch(authorizePermissions("admin", "owner"), updateMatch);
 
-router.route("/manual/:id").get(authenticateUser, getSingleMatchManual);
+router.route("/manual/:id").get(getSingleMatchManual);
 
 module.exports = router;
