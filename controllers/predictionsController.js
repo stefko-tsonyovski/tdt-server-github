@@ -9,8 +9,14 @@ const PREDICTION_POINTS = 6;
 const INVEST_POINTS = 3;
 
 const getAllApprovedPredictions = async (req, res) => {
-  const { page, itemsPerPage } = req.query;
-  const { userId } = req.user;
+  const { page, itemsPerPage, email } = req.query;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const predictions = await Prediction.find({
     isApproved: true,
@@ -111,8 +117,14 @@ const getTotalPredictionPoints = async (req, res) => {
 };
 
 const getAllVotedPredictionsByUser = async (req, res) => {
-  const { page, itemsPerPage } = req.query;
-  const { userId } = req.user;
+  const { page, itemsPerPage, email } = req.query;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const creator = await User.findOne({ _id: userId }).lean();
 
@@ -156,8 +168,14 @@ const getAllVotedPredictionsByUser = async (req, res) => {
 };
 
 const createPrediction = async (req, res) => {
-  const { userId: creatorId } = req.user;
-  const { content } = req.body;
+  const { content, email } = req.body;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: creatorId } = user;
 
   const prediction = await Prediction.create({
     content,
@@ -181,7 +199,7 @@ const createPrediction = async (req, res) => {
     throw new BadRequestError("You don't have enough prediction points!");
   }
 
-  const user = await User.findOneAndUpdate(
+  await User.findOneAndUpdate(
     { _id: creatorId },
     { predictionPoints: oldUser.predictionPoints - 3 },
     { runValidators: true, new: true }
@@ -223,8 +241,14 @@ const updatePredictionAnswer = async (req, res) => {
 
 const createVotePrediction = async (req, res) => {
   const { id: predictionId } = req.params;
-  const { userId: creatorId } = req.user;
-  const { answer } = req.body;
+  const { answer, email } = req.body;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: creatorId } = user;
 
   const voter = await User.findOne({ _id: creatorId }).lean();
   if (!voter) {
@@ -266,7 +290,14 @@ const createVotePrediction = async (req, res) => {
 
 const verifyVotedPrediction = async (req, res) => {
   const { id: votePredictionId } = req.params;
-  const { userId: creatorId } = req.user;
+  const { email } = req.query;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: creatorId } = user;
 
   const votePrediction = await UserPrediction.findOne({
     _id: votePredictionId,
@@ -288,8 +319,6 @@ const verifyVotedPrediction = async (req, res) => {
   if (prediction.answer === "none") {
     throw new BadRequestError("No update for prediction!");
   }
-
-  const user = await User.findOne({ _id: creatorId });
 
   if (prediction.answer === votePrediction.answer) {
     let resultPoints = user.predictionPoints;

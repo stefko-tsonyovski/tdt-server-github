@@ -18,7 +18,7 @@ const {
   deletePrediction,
 } = require("../controllers/predictionsController");
 
-router.route("/approved").get(authenticateUser, getAllApprovedPredictions);
+router.route("/approved").get(getAllApprovedPredictions);
 
 router
   .route("/unapproved")
@@ -27,14 +27,9 @@ router
     authorizePermissions("admin", "owner"),
     getAllUnapprovedPredictions
   );
-router
-  .route("/votedByUser")
-  .get(authenticateUser, getAllVotedPredictionsByUser);
+router.route("/votedByUser").get(getAllVotedPredictionsByUser);
 
-router
-  .route("/")
-  .post(authenticateUser, createPrediction)
-  .get(getTotalPredictionPoints);
+router.route("/").post(createPrediction).get(getTotalPredictionPoints);
 
 router
   .route("/approve/:id")
@@ -43,8 +38,8 @@ router
     authorizePermissions("admin", "owner"),
     approvePrediction
   );
-router.route("/vote/:id").post(authenticateUser, createVotePrediction);
-router.route("/verify/:id").post(authenticateUser, verifyVotedPrediction);
+router.route("/vote/:id").post(createVotePrediction);
+router.route("/verify/:id").post(verifyVotedPrediction);
 router
   .route("/:id")
   .patch(
