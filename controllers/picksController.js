@@ -50,8 +50,14 @@ const getAllByUserAndByTournament = async (req, res) => {
 };
 
 const createPick = async (req, res) => {
-  const { bracketId, playerId } = req.body;
-  const { userId } = req.user;
+  const { bracketId, playerId, email } = req.body;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const bracket = await Bracket.findOne({ _id: bracketId }).lean();
 
@@ -105,7 +111,14 @@ const createPick = async (req, res) => {
 
 const verifyPick = async (req, res) => {
   const { bracketId } = req.params;
-  const { userId } = req.user;
+  const { email } = req.query;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const bracket = await Bracket.findOne({ _id: bracketId }).lean();
   if (!bracket) {
