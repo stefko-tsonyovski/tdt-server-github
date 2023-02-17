@@ -381,6 +381,8 @@ const deletePrediction = async (req, res) => {
     throw new NotFoundError("Prediction does not exist!");
   }
 
+  await UserPrediction.deleteMany({ predictionId: id });
+
   res.status(StatusCodes.OK).json({ prediction });
 };
 
