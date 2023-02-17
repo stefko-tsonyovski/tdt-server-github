@@ -13,7 +13,16 @@ const getAllUsers = async (req, res) => {
 };
 
 const getTop200Users = async (req, res) => {
+  const { searchTerm } = req.query;
+
   let users = await User.find({ role: "user" }).lean();
+  if (searchTerm) {
+    users = users.filter((u) => {
+      const fullName = u.firstName + " " + u.lastName;
+      return fullName.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  }
+
   users = users
     .sort((a, b) => {
       const {
@@ -192,8 +201,15 @@ const getUsersByLeague = async (req, res) => {
 };
 
 const getCurrentUserPosition = async (req, res) => {
-  const { userId } = req.user;
-  console.log(userId);
+  const { email } = req.query;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
+
   let users = await User.find({ role: "user" }).lean();
   users = users
     .sort((a, b) => {
