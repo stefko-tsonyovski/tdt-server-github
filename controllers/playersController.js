@@ -597,7 +597,9 @@ const calculatePointsForUserPlayers = async (req, res) => {
   // UNCOMMENT IN PRODUCTION
 
   if (!(current >= start && current <= end)) {
-    throw new BadRequestError("You cannot update points for this week yet!");
+    throw new BadRequestError(
+      "You cannot update points for this week yet or this week has already finished!"
+    );
   }
 
   const userPlayers = await UserPlayer.find({

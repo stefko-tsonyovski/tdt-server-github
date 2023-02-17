@@ -20,37 +20,14 @@ const {
 
 router.route("/approved").get(getAllApprovedPredictions);
 
-router
-  .route("/unapproved")
-  .get(
-    authenticateUser,
-    authorizePermissions("admin", "owner"),
-    getAllUnapprovedPredictions
-  );
+router.route("/unapproved").get(getAllUnapprovedPredictions);
 router.route("/votedByUser").get(getAllVotedPredictionsByUser);
 
 router.route("/").post(createPrediction).get(getTotalPredictionPoints);
 
-router
-  .route("/approve/:id")
-  .patch(
-    authenticateUser,
-    authorizePermissions("admin", "owner"),
-    approvePrediction
-  );
+router.route("/approve/:id").patch(approvePrediction);
 router.route("/vote/:id").post(createVotePrediction);
 router.route("/verify/:id").post(verifyVotedPrediction);
-router
-  .route("/:id")
-  .patch(
-    authenticateUser,
-    authorizePermissions("admin", "owner"),
-    updatePredictionAnswer
-  )
-  .delete(
-    authenticateUser,
-    authorizePermissions("admin", "owner"),
-    deletePrediction
-  );
+router.route("/:id").patch(updatePredictionAnswer).delete(deletePrediction);
 
 module.exports = router;
