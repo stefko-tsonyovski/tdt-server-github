@@ -96,7 +96,6 @@ const getTournamentsByDate = async (req, res) => {
       return t;
     });
 
-  console.log(tournaments);
   res.status(StatusCodes.OK).json({ tournaments });
 };
 
