@@ -6,17 +6,22 @@ const Match = require("../models/Match");
 const Player = require("../models/Player");
 const Tournament = require("../models/Tournament");
 const Country = require("../models/Country");
+const User = require("../models/User");
 
 const createFavorite = async (req, res) => {
-  const { matchId } = req.body;
-  const match = await Match.find({ id: matchId }).lean();
-  const userId = req.user.userId;
+  const { matchId, email } = req.body;
+  const match = await Match.findOne({ id: matchId }).lean();
+  const user = await User.findOne({ email }).lean();
 
   if (!match) {
     throw new NotFoundError(`Cannot find match with id ${matchId}`);
   }
 
-  await Favorite.create({ matchId, userId });
+  if (!user) {
+    throw new NotFoundError(`Cannot find user with email ${email}`);
+  }
+
+  await Favorite.create({ matchId, userId: user._id });
 
   res.status(StatusCodes.OK).send();
 };
@@ -144,16 +149,19 @@ const getFavoriteMatchesByUser = async (req, res) => {
 };
 
 const deleteFavorite = async (req, res) => {
-  const { id: _id } = req.params;
+  const { favoriteId, email } = req.query;
 
-  const userId = req.user.userId;
-  const favorite = await Favorite.find({ _id, userId }).lean();
+  const user = await User.findOne({ email }).lean();
+  const favorite = await Favorite.findOne({
+    _id: favoriteId,
+    userId: user._id,
+  }).lean();
 
   if (!favorite) {
-    throw new NotFoundError(`Cannot find favorite with id ${_id}`);
+    throw new NotFoundError(`Cannot find favorite with id ${favoriteId}`);
   }
 
-  await Favorite.findOneAndRemove({ _id });
+  await Favorite.findOneAndRemove({ _id: favoriteId });
 
   res.status(StatusCodes.OK).send();
 };

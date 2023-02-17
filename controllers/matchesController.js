@@ -7,19 +7,24 @@ const Favorite = require("../models/Favorite");
 const Tournament = require("../models/Tournament");
 const Round = require("../models/Round");
 const Country = require("../models/Country");
+const User = require("../models/User");
 
 const getMatchesByTournamentIdAndDate = async (req, res) => {
-  const { tournamentId, date } = req.query;
-  const userId = req.user.userId;
+  const { tournamentId, date, email } = req.query;
 
   if (!tournamentId || !date) {
     throw new BadRequestError("Provide tournament and date");
   }
 
   const tournament = await Tournament.find({ id: tournamentId }).lean();
+  const user = await User.findOne({ email }).lean();
 
   if (!tournament) {
     throw new NotFoundError(`No tournament with id ${tournamentId}`);
+  }
+
+  if (!user) {
+    throw new NotFoundError(`Not tournament with email ${email}`);
   }
 
   let matches = await Match.find({ tournamentId }).lean();
@@ -37,7 +42,7 @@ const getMatchesByTournamentIdAndDate = async (req, res) => {
   }).lean();
 
   const countries = await Country.find({}).lean();
-  const favorites = await Favorite.find({ userId }).lean();
+  const favorites = await Favorite.find({ userId: user._id }).lean();
 
   matches = matches
     .filter((match) => {
@@ -52,10 +57,12 @@ const getMatchesByTournamentIdAndDate = async (req, res) => {
       const awayPlayer = players.find((p) => {
         return p.id === match.awayId;
       });
-      const favoriteId = favorites.find(
-        (favorite) =>
-          favorite.matchId === match.id && favorite.userId === userId
-      )?._id;
+      const favoriteId = favorites.find((favorite) => {
+        return (
+          favorite.matchId === match.id &&
+          favorite.userId === user._id.toString()
+        );
+      })?._id;
 
       if (!homePlayer || !awayPlayer) {
         return undefined;
@@ -416,8 +423,6 @@ const createMatch = async (req, res) => {
 const updateMatch = async (req, res) => {
   const { id } = req.params;
   const { homeId, awayId, winnerId } = req.body;
-
-  console.log(homeId, awayId);
 
   const match = await Match.findOne({ id: Number(id) }).lean();
   if (!match) {
