@@ -18,7 +18,7 @@ const getAllApprovedPredictions = async (req, res) => {
 
   const { _id: userId } = user;
 
-  const predictions = await Prediction.find({
+  let predictions = await Prediction.find({
     isApproved: true,
     answer: "none",
   })
@@ -26,9 +26,17 @@ const getAllApprovedPredictions = async (req, res) => {
     .lean();
   let resultPredictions = [];
 
+  predictions = predictions.filter((prediction) => {
+    const endDate = new Date(prediction.createdAt.toISOString());
+    endDate.setDate(endDate.getDate() + 3);
+    const current = new Date();
+
+    return current <= endDate;
+  });
+
   for (let i = 0; i < predictions.length; i++) {
     const prediction = predictions[i];
-    const { creatorId } = prediction;
+    const { creatorId, createdAt } = prediction;
 
     const userPrediction = await UserPrediction.findOne({
       userId,
@@ -46,8 +54,34 @@ const getAllApprovedPredictions = async (req, res) => {
 
     const { firstName: creatorFirstName, lastName: creatorLastName } = user;
 
+    const endDate = new Date(createdAt.toISOString());
+    endDate.setDate(endDate.getDate() + 3);
+
+    const countdownDateTime = new Date(endDate.toISOString()).getTime();
+    const currentTime = new Date().getTime();
+    const remainingDayTime = countdownDateTime - currentTime;
+    const totalDays = Math.floor(remainingDayTime / (1000 * 60 * 60 * 24));
+
+    const totalHours = Math.floor(
+      (remainingDayTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
+
+    const totalMinutes = Math.floor(
+      (remainingDayTime % (1000 * 60 * 60)) / (1000 * 60)
+    );
+
+    const totalSeconds = Math.floor((remainingDayTime % (1000 * 60)) / 1000);
+
+    const runningCountdownTime = {
+      countdownDays: totalDays,
+      countdownHours: totalHours,
+      countdownMinutes: totalMinutes,
+      countdownSeconds: totalSeconds,
+    };
+
     const resultPrediction = {
       ...prediction,
+      ...runningCountdownTime,
       creatorFirstName,
       creatorLastName,
     };
@@ -119,20 +153,12 @@ const getTotalPredictionPoints = async (req, res) => {
 const getAllVotedPredictionsByUser = async (req, res) => {
   const { page, itemsPerPage, email } = req.query;
 
-  const user = await User.findOne({ email }).lean();
-  if (!user) {
+  const currentUser = await User.findOne({ email }).lean();
+  if (!currentUser) {
     throw new NotFoundError("User does not exist!");
   }
 
-  const { _id: userId } = user;
-
-  const creator = await User.findOne({ _id: userId }).lean();
-
-  const { firstName: creatorFirstName, lastName: creatorLastName } = creator;
-
-  if (!creator) {
-    throw new NotFoundError("User does not exist!");
-  }
+  const { _id: userId } = currentUser;
 
   let votedPredictions = await UserPrediction.find({ userId })
     .sort("-createdAt")
@@ -144,6 +170,15 @@ const getAllVotedPredictionsByUser = async (req, res) => {
     const prediction = await Prediction.findOne({
       _id: predictionId,
     }).lean();
+
+    const { creatorId } = prediction;
+
+    const user = await User.findOne({ _id: creatorId });
+    if (!user) {
+      throw new NotFoundError("User does not exist!");
+    }
+
+    const { firstName: creatorFirstName, lastName: creatorLastName } = user;
 
     resultVoteProductions.push({
       _id,
@@ -317,7 +352,7 @@ const verifyVotedPrediction = async (req, res) => {
   }).lean();
 
   if (prediction.answer === "none") {
-    throw new BadRequestError("No update for prediction!");
+    throw new BadRequestError("No answer provided yet!");
   }
 
   if (prediction.answer === votePrediction.answer) {
