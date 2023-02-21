@@ -13,10 +13,7 @@ const {
   updatePoints,
 } = require("../controllers/leaguesController");
 
-router
-  .route("/")
-  .get(authenticateUser, getTop200Leagues)
-  .post(authenticateUser, createLeague);
+router.route("/").get(getTop200Leagues).post(authenticateUser, createLeague);
 
 router.route("/kick").patch(authenticateUser, kickMember);
 router.route("/leave/:id").patch(authenticateUser, leaveLeague);

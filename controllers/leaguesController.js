@@ -19,7 +19,7 @@ const getTop200Leagues = async (req, res) => {
   }
 
   res.status(StatusCodes.OK).json({
-    leagues: leagues.slice(0, 200).map((league, index) => {
+    leagues: leagues.map((league, index) => {
       return {
         ...league,
         position: index + 1,
