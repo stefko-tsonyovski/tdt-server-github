@@ -72,7 +72,6 @@ const getTop200Users = async (req, res) => {
         }
       }
     })
-    .slice(0, 200)
     .map((user, index) => {
       const {
         points,
@@ -317,7 +316,7 @@ const getUser = async (req, res) => {
     throw new NotFoundError("User does not exist!");
   }
 
-  res.status(StatusCodes.OK).json({ user });
+  res.status(StatusCodes.OK).json({ ...user });
 };
 
 const getTeamByUserAndByWeek = async (req, res) => {
