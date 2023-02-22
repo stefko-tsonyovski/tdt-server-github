@@ -61,8 +61,8 @@ router
 router.route("/calculateTotal").get(getTotalPoints).patch(calculateTotalPoints);
 
 router.route("/calculateTotal").patch(authenticateUser, calculateTotalPoints);
-router.route("/:id").get(authenticateUser, getSinglePlayer);
+router.route("/:id").get(getSinglePlayer);
 
-router.route("/:id/matches").get(authenticateUser, getSinglePlayerMatches);
+router.route("/:id/matches").get(getSinglePlayerMatches);
 
 module.exports = router;
