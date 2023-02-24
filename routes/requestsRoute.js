@@ -6,13 +6,15 @@ const {
   getAllUnapprovedRequestsByLeagueId,
   createRequest,
   approveRequest,
+  deleteRequest,
 } = require("../controllers/requestsController");
 
 router
   .route("/unapprovedByLeague/:leagueId")
-  .get(authenticateUser, getAllUnapprovedRequestsByLeagueId);
+  .get(getAllUnapprovedRequestsByLeagueId);
 
-router.route("/").post(authenticateUser, createRequest);
-router.route("/approve").patch(authenticateUser, approveRequest);
+router.route("/").post(createRequest);
+router.route("/approve").patch(approveRequest);
+router.route("/:id").delete(deleteRequest);
 
 module.exports = router;

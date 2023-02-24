@@ -9,16 +9,19 @@ const { BadRequestError, NotFoundError } = require("../errors");
 
 const getAllUnapprovedRequestsByLeagueId = async (req, res) => {
   const { leagueId } = req.params;
-  const { userId } = req.user;
+  const { email } = req.query;
+
+  const currentUser = await User.findOne({ email }).lean();
+  if (!currentUser) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = currentUser;
 
   const league = await League.findOne({ _id: leagueId }).lean();
 
   if (!league) {
     throw new NotFoundError("League does not exist!");
-  }
-
-  if (league.creatorId !== userId) {
-    throw new BadRequestError("Only creator has access to this information!");
   }
 
   const requests = await Request.find({ leagueId, isApproved: false }).lean();
@@ -55,8 +58,14 @@ const getAllUnapprovedRequestsByLeagueId = async (req, res) => {
 };
 
 const createRequest = async (req, res) => {
-  const { leagueId } = req.body;
-  const { userId: creatorId } = req.user;
+  const { leagueId, email } = req.body;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: creatorId } = user;
 
   const usersByLeague = await User.find({ leagueId }).lean();
   if (usersByLeague.some((u) => u._id.toString() === creatorId.toString())) {
@@ -80,8 +89,14 @@ const createRequest = async (req, res) => {
 };
 
 const approveRequest = async (req, res) => {
-  const { creatorId, leagueId } = req.query;
-  const { userId } = req.user;
+  const { creatorId, leagueId, email } = req.query;
+
+  const currentUser = await User.findOne({ email }).lean();
+  if (!currentUser) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = currentUser;
 
   const request = await Request.findOne({ creatorId, leagueId }).lean();
   if (!request) {
@@ -93,7 +108,7 @@ const approveRequest = async (req, res) => {
     throw new NotFoundError("League does not exist!");
   }
 
-  if (league.creatorId !== userId) {
+  if (league.creatorId !== userId.toString()) {
     throw new BadRequestError(
       "Only creator of the league can approve requests!"
     );
@@ -117,8 +132,23 @@ const approveRequest = async (req, res) => {
   res.status(StatusCodes.OK).json({ deletedRequest, user });
 };
 
+const deleteRequest = async (req, res) => {
+  const { id } = req.params;
+
+  const deletedRequest = await Request.findOneAndRemove({
+    _id: id,
+  });
+
+  if (!deletedRequest) {
+    throw new NotFoundError("Request does not exist!");
+  }
+
+  res.status(StatusCodes.OK).json({ deletedRequest });
+};
+
 module.exports = {
   getAllUnapprovedRequestsByLeagueId,
   createRequest,
   approveRequest,
+  deleteRequest,
 };

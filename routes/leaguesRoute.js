@@ -13,16 +13,12 @@ const {
   updatePoints,
 } = require("../controllers/leaguesController");
 
-router.route("/").get(getTop200Leagues).post(authenticateUser, createLeague);
+router.route("/").get(getTop200Leagues).post(createLeague);
 
-router.route("/kick").patch(authenticateUser, kickMember);
-router.route("/leave/:id").patch(authenticateUser, leaveLeague);
-router.route("/updatePoints/:id").patch(authenticateUser, updatePoints);
+router.route("/kick").patch(kickMember);
+router.route("/leave/:id").patch(leaveLeague);
+router.route("/updatePoints/:id").patch(updatePoints);
 
-router
-  .route("/:id")
-  .get(authenticateUser, getLeague)
-  .patch(authenticateUser, updateLeague)
-  .delete(authenticateUser, deleteLeague);
+router.route("/:id").get(getLeague).patch(updateLeague).delete(deleteLeague);
 
 module.exports = router;

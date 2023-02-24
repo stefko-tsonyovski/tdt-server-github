@@ -29,14 +29,14 @@ const getTop200Leagues = async (req, res) => {
 };
 
 const createLeague = async (req, res) => {
-  const { name } = req.body;
-  const { userId } = req.user;
+  const { name, email } = req.body;
 
-  const user = await User.findOne({ _id: userId });
-
+  const user = await User.findOne({ email });
   if (!user) {
     throw new NotFoundError("User does not exist!");
   }
+
+  const { _id: userId } = user;
 
   if (user.leagueId) {
     throw new BadRequestError("You already have a league!");
@@ -76,8 +76,14 @@ const getLeague = async (req, res) => {
 
 const updateLeague = async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
-  const { userId } = req.user;
+  const { name, email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const league = await League.findOne({ _id: id }).lean();
 
@@ -85,7 +91,7 @@ const updateLeague = async (req, res) => {
     throw new NotFoundError("League does not exist!");
   }
 
-  if (league.creatorId !== userId) {
+  if (league.creatorId !== userId.toString()) {
     throw new BadRequestError(
       "Only creator of the league can modify its name!"
     );
@@ -108,7 +114,14 @@ const updateLeague = async (req, res) => {
 
 const deleteLeague = async (req, res) => {
   const { id } = req.params;
-  const { userId } = req.user;
+  const { email } = req.query;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const league = await League.findOne({ _id: id }).lean();
 
@@ -116,7 +129,7 @@ const deleteLeague = async (req, res) => {
     throw new NotFoundError("League does not exist!");
   }
 
-  if (league.creatorId !== userId) {
+  if (league.creatorId !== userId.toString()) {
     throw new BadRequestError("Only creator of the league can delete it!");
   }
 
@@ -171,18 +184,19 @@ const deleteLeague = async (req, res) => {
 
 const leaveLeague = async (req, res) => {
   const { id } = req.params;
-  const { userId } = req.user;
+  const { email } = req.query;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const league = await League.findOne({ _id: id }).lean();
 
   if (!league) {
     throw new NotFoundError("League does not exist!");
-  }
-
-  const user = await User.findOne({ _id: userId }).lean();
-
-  if (!user) {
-    throw new NotFoundError("User does not exist!");
   }
 
   const updatedUser = await User.findOneAndUpdate(
@@ -302,19 +316,29 @@ const leaveLeague = async (req, res) => {
     res.status(StatusCodes.OK).json({ deletedLeague });
   }
 
-  const bestUser = users.find((u) => u.email !== user.email);
-  const updatedLeague = await League.findOneAndUpdate(
-    { _id: id },
-    { creatorId: bestUser._id },
-    { runValidators: true, new: true }
-  );
+  if (userId.toString() === league.creatorId) {
+    const bestUser = users.find((u) => u.email !== user.email);
+    const updatedLeague = await League.findOneAndUpdate(
+      { _id: id },
+      { creatorId: bestUser._id },
+      { runValidators: true, new: true }
+    );
 
-  res.status(StatusCodes.OK).json({ updatedUser, updatedLeague });
+    res.status(StatusCodes.OK).json({ updatedUser, updatedLeague });
+  }
+
+  res.status(StatusCodes.OK).json({ updatedUser });
 };
 
 const kickMember = async (req, res) => {
-  const { memberId, leagueId } = req.query;
-  const { userId } = req.user;
+  const { memberId, leagueId, email } = req.query;
+
+  const currentUser = await User.findOne({ email }).lean();
+  if (!currentUser) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = currentUser;
 
   const user = await User.findOne({ _id: userId }).lean();
   if (!user) {
@@ -331,13 +355,13 @@ const kickMember = async (req, res) => {
     throw new NotFoundError("League does not exist!");
   }
 
-  if (league.creatorId !== userId) {
+  if (league.creatorId !== userId.toString()) {
     throw new BadRequestError(
       "Only creator of the league can kick members from it!"
     );
   }
 
-  if (userId === memberId) {
+  if (userId.toString() === memberId) {
     throw new BadRequestError("Cannot kick yourself!");
   }
 
@@ -359,14 +383,21 @@ const kickMember = async (req, res) => {
 
 const updatePoints = async (req, res) => {
   const { id } = req.params;
-  const { userId } = req.user;
+  const { email } = req.query;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const league = await League.findOne({ _id: id }).lean();
   if (!league) {
     throw new NotFoundError("League does not exist!");
   }
 
-  if (league.creatorId !== userId) {
+  if (league.creatorId !== userId.toString()) {
     throw new BadRequestError(
       "Only creator of the league can update its points!"
     );

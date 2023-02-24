@@ -8,7 +8,14 @@ const { StatusCodes } = require("http-status-codes");
 const { NotFoundError, BadRequestError } = require("../errors");
 
 const getAllLeagueInvitationsByReceiverId = async (req, res) => {
-  const { userId: receiverId } = req.user;
+  const { email } = req.query;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: receiverId } = user;
 
   const leagueInvitations = await LeagueInvitation.find({ receiverId }).lean();
   let resultLeagueInvitations = [];
@@ -44,15 +51,21 @@ const getAllLeagueInvitationsByReceiverId = async (req, res) => {
 };
 
 const createInvitation = async (req, res) => {
-  const { userId } = req.user;
-  const { leagueId, receiverId } = req.body;
+  const { leagueId, receiverId, email } = req.body;
+
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = user;
 
   const league = await League.findOne({ _id: leagueId }).lean();
   if (!league) {
     throw new NotFoundError("League does not exist!");
   }
 
-  if (league.creatorId !== userId) {
+  if (league.creatorId !== userId.toString()) {
     throw new BadRequestError("Only creator can send invitations!");
   }
 
@@ -82,15 +95,22 @@ const createInvitation = async (req, res) => {
 };
 
 const acceptInvitation = async (req, res) => {
-  const { userId } = req.user;
   const { id } = req.params;
+  const { email } = req.query;
+
+  const currentUser = await User.findOne({ email }).lean();
+  if (!currentUser) {
+    throw new NotFoundError("User does not exist!");
+  }
+
+  const { _id: userId } = currentUser;
 
   const leagueInvitation = await LeagueInvitation.findOne({ _id: id }).lean();
   if (!leagueInvitation) {
     throw new NotFoundError("League invitation does not exist!");
   }
 
-  if (leagueInvitation.receiverId !== userId) {
+  if (leagueInvitation.receiverId !== userId.toString()) {
     throw new BadRequestError("This invitation is not for you!");
   }
 
@@ -116,8 +136,20 @@ const acceptInvitation = async (req, res) => {
   res.status(StatusCodes.OK).json({ deletedLeagueInvitation, updatedUser });
 };
 
+const deleteInvitation = async (req, res) => {
+  const { id } = req.params;
+
+  const leagueInvitation = await LeagueInvitation.findOneAndRemove({ _id: id });
+  if (!leagueInvitation) {
+    throw new NotFoundError("League invitation does not exist!");
+  }
+
+  res.status(StatusCodes.OK).json({ leagueInvitation });
+};
+
 module.exports = {
   getAllLeagueInvitationsByReceiverId,
   createInvitation,
   acceptInvitation,
+  deleteInvitation,
 };
