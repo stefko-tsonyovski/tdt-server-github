@@ -269,8 +269,12 @@ const getMatchesByPlayerGroupedByTournamentId = async (req, res) => {
 };
 
 const getLastMatchesByPlayer = async (req, res) => {
-  const { skipMatchId, playerId, surface } = req.body;
-  const { userId } = req.user;
+  const { skipMatchId, playerId, surface, email } = req.body;
+  const user = await User.findOne({ email }).lean();
+
+  if (!user) {
+    throw new NotFoundError("User not found!");
+  }
 
   let matches = await Match.find({
     $or: [{ homeId: { $eq: playerId } }, { awayId: { $eq: playerId } }],
@@ -310,7 +314,8 @@ const getLastMatchesByPlayer = async (req, res) => {
 
       const favoriteId = favorites.find(
         (favorite) =>
-          favorite.matchId === match.id && favorite.userId === userId
+          favorite.matchId === match.id &&
+          favorite.userId === user._id.toString()
       )?._id;
 
       if (!homePlayer || !awayPlayer) {
@@ -333,12 +338,17 @@ const getLastMatchesByPlayer = async (req, res) => {
     })
     .filter((match) => match);
 
+  console.log(matches);
   res.status(StatusCodes.OK).json({ player, matches });
 };
 
 const getLastHedToHeadMatches = async (req, res) => {
-  const { skipMatchId, homeId, awayId, surface } = req.body;
-  const { userId } = req.user;
+  const { skipMatchId, homeId, awayId, surface, email } = req.body;
+  const user = await User.findOne({ email }).lean();
+
+  if (!user) {
+    throw new NotFoundError("User not found!");
+  }
 
   const favorites = await Favorite.find({}).lean();
   const tournaments = await Tournament.find({}).lean();
@@ -355,7 +365,7 @@ const getLastHedToHeadMatches = async (req, res) => {
       },
     ],
     id: {
-      $not: skipMatchId,
+      $not: { $eq: skipMatchId },
     },
   }).lean();
 
@@ -363,19 +373,23 @@ const getLastHedToHeadMatches = async (req, res) => {
   const awayPlayer = await Player.findOne({ id: awayId }).lean();
 
   // filter matches by surface
-  matches = matches.filter((match) => {
-    const tournament = tournaments.find(
-      (tournament) => tournament.id === match.tournamentId
-    );
 
-    if (tournament.surface.toLowerCase() === surface.toLowerCase()) {
-      return true;
-    }
-  });
+  if (surface.toLowerCase() !== "all") {
+    matches = matches.filter((match) => {
+      const tournament = tournaments.find(
+        (tournament) => tournament.id === match.tournamentId
+      );
+
+      if (tournament.surface.toLowerCase() === surface.toLowerCase()) {
+        return true;
+      }
+    });
+  }
 
   matches = matches.map((match) => {
     const favoriteId = favorites.find(
-      (favorite) => favorite.matchId === match.id && favorite.userId === userId
+      (favorite) =>
+        favorite.matchId === match.id && favorite.userId === user._id.toString()
     )?._id;
 
     return {
