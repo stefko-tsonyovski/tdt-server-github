@@ -168,34 +168,7 @@ const verifyPick = async (req, res) => {
     }
 
     const { name: roundName } = round;
-    let pickPoints = 0;
-
-    switch (roundName) {
-      case "1/64 finals":
-        pickPoints += 5;
-        break;
-      case "1/32 finals":
-        pickPoints += 10;
-        break;
-      case "1/16 finals":
-        pickPoints += 20;
-        break;
-      case "1/8 finals":
-        pickPoints += 40;
-        break;
-      case "1/4 finals":
-        pickPoints += 80;
-        break;
-      case "1/2 finals":
-        pickPoints += 160;
-        break;
-      case "final":
-        pickPoints += 320;
-        break;
-
-      default:
-        throw new NotFoundError("Invalid round name!");
-    }
+    let pickPoints = 5;
 
     const userWeek = await UserWeek.findOne({
       userId,

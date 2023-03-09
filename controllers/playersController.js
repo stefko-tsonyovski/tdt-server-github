@@ -651,29 +651,10 @@ const calculatePointsForUserPlayers = async (req, res) => {
       const homeMatch = homeMatches[j];
       await UserMatchPlayer.create({ userId, playerId, matchId: homeMatch.id });
 
-      let {
-        homeSets,
-        homeSet1,
-        homeSet2,
-        homeSet3,
-        homeSet4,
-        homeSet5,
-        homeAces,
-        homeUnforcedErrors,
-        homeDoubleFaults,
-        homeWinners,
-      } = homeMatch;
+      let { homeSets, homeSet1, homeSet2, homeSet3 } = homeMatch;
 
-      if (homeSet3 === "n/a") {
+      if (homeSet3 === "n/a" || homeSet3 === "No 3rd set") {
         homeSet3 = 0;
-      }
-
-      if (homeSet4 === "n/a") {
-        homeSet4 = 0;
-      }
-
-      if (homeSet5 === "n/a") {
-        homeSet5 = 0;
       }
 
       const pointsForWin =
@@ -684,12 +665,6 @@ const calculatePointsForUserPlayers = async (req, res) => {
         Number(homeSet1) * pointsSystem.GAME +
         Number(homeSet2) * pointsSystem.GAME +
         Number(homeSet3) * pointsSystem.GAME +
-        Number(homeSet4) * pointsSystem.GAME +
-        Number(homeSet5) * pointsSystem.GAME +
-        Number(homeAces) * pointsSystem.ACE +
-        Number(homeUnforcedErrors) * pointsSystem.UNFORCED_ERROR +
-        Number(homeDoubleFaults) * pointsSystem.DOUBLE_FAULT +
-        Number(homeWinners) * pointsSystem.WINNER +
         pointsForWin;
     }
 
@@ -697,29 +672,10 @@ const calculatePointsForUserPlayers = async (req, res) => {
       const awayMatch = awayMatches[j];
       await UserMatchPlayer.create({ userId, playerId, matchId: awayMatch.id });
 
-      let {
-        awaySets,
-        awaySet1,
-        awaySet2,
-        awaySet3,
-        awaySet4,
-        awaySet5,
-        awayAces,
-        awayUnforcedErrors,
-        awayDoubleFaults,
-        awayWinners,
-      } = awayMatch;
+      let { awaySets, awaySet1, awaySet2, awaySet3 } = awayMatch;
 
-      if (awaySet3 === "n/a") {
+      if (awaySet3 === "n/a" || awaySet3 === "No 3rd set") {
         awaySet3 = 0;
-      }
-
-      if (awaySet4 === "n/a") {
-        awaySet4 = 0;
-      }
-
-      if (awaySet5 === "n/a") {
-        awaySet5 = 0;
       }
 
       const pointsForWin =
@@ -730,12 +686,6 @@ const calculatePointsForUserPlayers = async (req, res) => {
         Number(awaySet1) * pointsSystem.GAME +
         Number(awaySet2) * pointsSystem.GAME +
         Number(awaySet3) * pointsSystem.GAME +
-        Number(awaySet4) * pointsSystem.GAME +
-        Number(awaySet5) * pointsSystem.GAME +
-        Number(awayAces) * pointsSystem.ACE +
-        Number(awayUnforcedErrors) * pointsSystem.UNFORCED_ERROR +
-        Number(awayDoubleFaults) * pointsSystem.DOUBLE_FAULT +
-        Number(awayWinners) * pointsSystem.WINNER +
         pointsForWin;
     }
 

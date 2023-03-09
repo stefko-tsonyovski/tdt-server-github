@@ -2,6 +2,7 @@ const Bracket = require("../models/Bracket");
 const Tournament = require("../models/Tournament");
 const Round = require("../models/Round");
 const Player = require("../models/Player");
+const Match = require("../models/Match");
 
 const { StatusCodes } = require("http-status-codes");
 const { NotFoundError, BadRequestError } = require("../errors");
@@ -117,11 +118,45 @@ const getBracket = async (req, res) => {
 };
 
 const updateBracket = async (req, res) => {
-  const { id } = req.params;
+  const { name, homeName, awayName, date, tournamentName, roundName } =
+    req.body;
+
+  const homePlayer = await Player.findOne({ name: homeName }).lean();
+  if (!homePlayer) {
+    throw new NotFoundError("Home player does not exist!");
+  }
+
+  const awayPlayer = await Player.findOne({ name: awayName }).lean();
+  if (!awayPlayer) {
+    throw new NotFoundError("Away player does not exist!");
+  }
+
+  const tournament = await Tournament.findOne({
+    name: tournamentName,
+    season: 2023,
+  }).lean();
+  if (!tournament) {
+    throw new NotFoundError("Tournament does not exist!");
+  }
+
+  const round = await Round.findOne({ name: roundName }).lean();
+  if (!round) {
+    throw new NotFoundError("Round does not exist!");
+  }
 
   const bracket = await Bracket.findOneAndUpdate(
-    { _id: id },
-    { ...req.body },
+    {
+      name,
+      tournamentId: tournament.id,
+      roundId: round._id,
+    },
+    {
+      date,
+      homeId: homePlayer.id,
+      awayId: awayPlayer.id,
+      tournamentId: tournament.id,
+      roundId: round._id,
+    },
     { runValidators: true, new: true }
   );
 
@@ -129,7 +164,19 @@ const updateBracket = async (req, res) => {
     throw new NotFoundError("Bracket does not exist!");
   }
 
-  res.status(StatusCodes.OK).json({ bracket });
+  const matches = await Match.find({}).sort("id").lean();
+
+  const match = await Match.create({
+    id: matches.length ? matches[matches.length - 1].id + 1 : 1,
+    status: "pending",
+    homeId: homePlayer.id,
+    awayId: awayPlayer.id,
+    date,
+    tournamentId: tournament.id,
+    roundId: round._id,
+  });
+
+  res.status(StatusCodes.OK).json({ bracket, match });
 };
 
 module.exports = {

@@ -5,13 +5,17 @@ const PlayerSchema = new mongoose.Schema({
     type: Number,
     required: [true, "Please provide id"],
   },
+  ultimateTennisID: {
+    type: String,
+    required: [true, "Please provide ultimate tennis ID"],
+  },
   name: {
     type: String,
     required: [true, "Please provide name"],
   },
   country: {
     type: String,
-    required: [true, "Please provide country name"],
+    default: "Spain",
   },
   points: {
     type: Number,
@@ -23,15 +27,16 @@ const PlayerSchema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    required: [true, "Please provide price"],
+    default: 0,
   },
   imageUrl: {
     type: String,
-    required: [true, "Please provide image"],
+    default:
+      "https://res.cloudinary.com/dcvkhhwth/image/upload/v1677965176/default-player_bu9plw.png",
   },
   gender: {
     type: String,
-    required: [true, "Please provide gender"],
+    default: "male",
   },
 });
 

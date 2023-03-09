@@ -18,11 +18,8 @@ const {
 router
   .route("/")
   .get(authenticateUser, getAllBrackets)
-  .post(
-    authenticateUser,
-    authorizePermissions("admin", "owner"),
-    createBracket
-  );
+  .post(authenticateUser, authorizePermissions("admin", "owner"), createBracket)
+  .patch(updateBracket);
 
 router
   .route("/byTournament")
@@ -32,13 +29,6 @@ router
   .route("/byTournamentAndRound")
   .get(getAllBracketsByTournamentIdAndRoundId);
 
-router
-  .route("/:id")
-  .get(authenticateUser, getBracket)
-  .patch(
-    authenticateUser,
-    authorizePermissions("admin", "owner"),
-    updateBracket
-  );
+router.route("/:id").get(authenticateUser, getBracket);
 
 module.exports = router;

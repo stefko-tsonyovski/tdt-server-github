@@ -41,6 +41,10 @@ const TournamentSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please provide weekId"],
   },
+  ultimateTennisID: {
+    type: Number,
+    required: [true, "Please provide ultimate tennis ID"],
+  },
 });
 
 module.exports = mongoose.model("Tournament", TournamentSchema);

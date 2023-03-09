@@ -12,6 +12,7 @@ const User = require("./models/User");
 const UserPlayer = require("./models/UserPlayer");
 const UserWeek = require("./models/UserWeek");
 const Week = require("./models/Week");
+const Bracket = require("./models/Bracket");
 
 const express = require("express");
 const app = express();
@@ -168,64 +169,275 @@ const getSingleMatch = async (matchId) => {
   }
 };
 
-const seedMatches = async () => {
+const seedMatches = async (tournamentName) => {
+  const tournament = await Tournament.findOne({
+    name: tournamentName,
+    season: 2023,
+  }).lean();
+  if (!tournament) {
+    console.log("Tournament does not exist!");
+    return;
+  }
+
   const options = {
     method: "GET",
-    url: "https://tennis-live-data.p.rapidapi.com/matches/1437",
+    url: `https://ultimate-tennis1.p.rapidapi.com/tournament_results/${tournament.ultimateTennisID}/2023`,
     headers: {
-      "X-RapidAPI-Key": "37f78d8b99mshb1330cfedd86ceap1a5633jsn41bbf1214be1",
-      "X-RapidAPI-Host": "tennis-live-data.p.rapidapi.com",
+      "X-RapidAPI-Key": "b42add0993msh416609f115312fdp1ac881jsn7ffc40503465",
+      "X-RapidAPI-Host": "ultimate-tennis1.p.rapidapi.com",
     },
   };
 
   try {
     const response = await axios.request(options);
+    const matches = Array.from(response.data.data);
 
-    const matches = Array.from(response.data.results.matches).slice(112);
-    console.log(matches);
-    matches.forEach((match) => {
-      getSingleMatch(match.id);
-      sleep(1000);
-    });
+    for (let i = 0; i < matches.length; i++) {
+      const match = matches[i];
+
+      const loser = await Player.findOne({
+        ultimateTennisID: match["Loser Id"],
+      }).lean();
+      if (!loser) {
+        console.log("Loser does not exist!");
+        continue;
+      }
+
+      const winner = await Player.findOne({
+        ultimateTennisID: match["Winner ID"],
+      }).lean();
+
+      if (!winner) {
+        console.log("Winner does not exist!");
+        continue;
+      }
+
+      let dbMatch = await Match.findOne({
+        homeId: loser.id,
+        awayId: winner.id,
+        tournamentId: tournament.id,
+      }).lean();
+
+      if (dbMatch) {
+        const firstSet = match["1st Set"];
+        const secondSet = match["2nd Set"];
+        const thirdSet = match["3rd Set"];
+
+        const firstSetWinner = !isNaN(Number(firstSet[0]))
+          ? Number(firstSet[0])
+          : 0;
+        const firstSetLoser = !isNaN(Number(firstSet[1]))
+          ? Number(firstSet[1])
+          : 0;
+
+        const secondSetWinner = !isNaN(Number(secondSet[0]))
+          ? Number(secondSet[0])
+          : 0;
+        const secondSetLoser = !isNaN(Number(secondSet[1]))
+          ? Number(secondSet[1])
+          : 0;
+
+        const thirdSetWinner = !isNaN(Number(thirdSet[0]))
+          ? Number(thirdSet[0])
+          : 0;
+        const thirdSetLoser = !isNaN(Number(thirdSet[1]))
+          ? Number(thirdSet[1])
+          : 0;
+
+        let winnerSets = 0;
+        let loserSets = 0;
+
+        if (firstSetWinner > firstSetLoser) {
+          winnerSets++;
+        } else if (firstSetWinner < firstSetLoser) {
+          loserSets++;
+        }
+
+        if (secondSetWinner > secondSetLoser) {
+          winnerSets++;
+        } else if (secondSetWinner < secondSetLoser) {
+          loserSets++;
+        }
+
+        if (thirdSetWinner > thirdSetLoser) {
+          winnerSets++;
+        } else if (thirdSetWinner < thirdSetLoser) {
+          loserSets++;
+        }
+
+        await Match.findOneAndUpdate(
+          { id: dbMatch.id },
+          {
+            winnerId: winner.id,
+            homeSets: loserSets.toString(),
+            awaySets: winnerSets.toString(),
+            homeSet1: firstSetLoser.toString(),
+            homeSet2: secondSetLoser.toString(),
+            homeSet3: thirdSetLoser.toString(),
+            awaySet1: firstSetWinner.toString(),
+            awaySet2: secondSetWinner.toString(),
+            awaySet3: thirdSetWinner.toString(),
+            status: "finished",
+          },
+          { runValidators: true }
+        );
+      } else {
+        dbMatch = await Match.findOne({
+          homeId: winner.id,
+          awayId: loser.id,
+          tournamentId: tournament.id,
+        }).lean();
+
+        if (!dbMatch) {
+          console.log("Match does not exist!");
+          continue;
+        }
+
+        const firstSet = match["1st Set"];
+        const secondSet = match["2nd Set"];
+        const thirdSet = match["3rd Set"];
+
+        const firstSetWinner = !isNaN(Number(firstSet[0]))
+          ? Number(firstSet[0])
+          : 0;
+        const firstSetLoser = !isNaN(Number(firstSet[1]))
+          ? Number(firstSet[1])
+          : 0;
+
+        const secondSetWinner = !isNaN(Number(secondSet[0]))
+          ? Number(secondSet[0])
+          : 0;
+        const secondSetLoser = !isNaN(Number(secondSet[1]))
+          ? Number(secondSet[1])
+          : 0;
+
+        const thirdSetWinner = !isNaN(Number(thirdSet[0]))
+          ? Number(thirdSet[0])
+          : 0;
+        const thirdSetLoser = !isNaN(Number(thirdSet[1]))
+          ? Number(thirdSet[1])
+          : 0;
+
+        let winnerSets = 0;
+        let loserSets = 0;
+
+        if (firstSetWinner > firstSetLoser) {
+          winnerSets++;
+        } else if (firstSetWinner < firstSetLoser) {
+          loserSets++;
+        }
+
+        if (secondSetWinner > secondSetLoser) {
+          winnerSets++;
+        } else if (secondSetWinner < secondSetLoser) {
+          loserSets++;
+        }
+
+        if (thirdSetWinner > thirdSetLoser) {
+          winnerSets++;
+        } else if (thirdSetWinner < thirdSetLoser) {
+          loserSets++;
+        }
+        // No 3rd set check
+        await Match.findOneAndUpdate(
+          { id: dbMatch.id },
+          {
+            winnerId: winner.id,
+            homeSets: winnerSets.toString(),
+            awaySets: loserSets.toString(),
+            homeSet1: firstSetWinner.toString(),
+            homeSet2: secondSetWinner.toString(),
+            homeSet3: thirdSetWinner.toString(),
+            awaySet1: firstSetLoser.toString(),
+            awaySet2: secondSetLoser.toString(),
+            awaySet3: thirdSetLoser.toString(),
+            status: "finished",
+          },
+          { runValidators: true }
+        );
+      }
+
+      let bracket = await Bracket.findOne({
+        homeId: loser.id,
+        awayId: winner.id,
+        tournamentId: tournament.id,
+      });
+
+      if (bracket) {
+        await Bracket.findOneAndUpdate(
+          { _id: bracket._id },
+          { winnerId: winner.id },
+          { runValidators: true }
+        );
+      } else {
+        bracket = await Bracket.findOne({
+          homeId: winner.id,
+          awayId: loser.id,
+          tournamentId: tournament.id,
+        });
+
+        if (!bracket) {
+          console.log("Bracket does not exist!");
+          continue;
+        }
+
+        await Bracket.findOneAndUpdate(
+          { _id: bracket._id },
+          { winnerId: winner.id },
+          { runValidators: true }
+        );
+      }
+    }
   } catch (error) {
     console.log(error);
   }
 };
 
 const seedPlayers = async () => {
-  const options = {
-    method: "GET",
-    url: "https://tennis-live-data.p.rapidapi.com/rankings/ATP",
-    headers: {
-      "X-RapidAPI-Key": "b42add0993msh416609f115312fdp1ac881jsn7ffc40503465",
-      "X-RapidAPI-Host": "tennis-live-data.p.rapidapi.com",
-    },
-  };
-
   try {
-    const response = await axios.request(options);
+    const absolutePath = path.join(__dirname, "atp-rankings.json");
+    const jsonString = await readFile(absolutePath);
+    const response = JSON.parse(jsonString);
 
-    const players = Array.from(response.data.results.rankings);
-    console.log(players);
-    players
-      .filter((p) => p.country)
-      .forEach((player) => {
-        const {
-          id,
-          country,
-          full_name: name,
-          ranking_points: points,
-          ranking,
-        } = player;
+    const dbPlayers = await Player.find({}).sort("id");
+    const players = Array.from(response.data);
 
-        Player.create({
-          id,
-          country,
-          name,
-          points,
-          ranking,
-        });
+    for (let i = 0; i < players.length; i++) {
+      const player = players[i];
+
+      await Player.create({
+        id: i + 1,
+        ultimateTennisID: player.id,
+        name: player.Name,
+        points: player.Points,
+        ranking: player.Rank,
       });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const updateTournaments = async () => {
+  try {
+    const absolutePath = path.join(__dirname, "tournaments.json");
+    const jsonString = await readFile(absolutePath);
+    const response = JSON.parse(jsonString);
+
+    const tournaments = Array.from(response.Tournaments);
+
+    for (let i = 0; i < tournaments.length; i++) {
+      const tournament = tournaments[i];
+      const { ID } = tournament;
+
+      const dbTournament = await Tournament.findOneAndUpdate(
+        { name: tournament["Tournament Name"], season: 2023 },
+        {
+          ultimateTennisID: Number(ID),
+        },
+        { runValidators: true, new: true }
+      );
+    }
   } catch (error) {
     console.log(error);
   }
@@ -409,7 +621,7 @@ const start = async () => {
     // await seedPlayers();
 
     // Seed matches
-    // await seedMatches();
+    await seedMatches("Dubai Duty Free Tennis Championships");
 
     // Update players
     // await updatePlayers();
@@ -428,6 +640,9 @@ const start = async () => {
 
     // Update weeks
     // await updateWeeks();
+
+    // Update tournaments
+    // await updateTournaments();
 
     console.log("Seeding successful!");
   } catch (error) {
