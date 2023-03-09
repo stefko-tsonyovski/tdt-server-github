@@ -11,6 +11,9 @@ const BracketSchema = new mongoose.Schema({
   awayId: {
     type: Number,
   },
+  date: {
+    type: String,
+  },
   winnerId: {
     type: Number,
   },
