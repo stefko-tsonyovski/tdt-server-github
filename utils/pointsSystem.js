@@ -6,6 +6,7 @@ const pointsSystem = {
   GAME: 1,
   SET: 2,
   MATCH: 5,
+  BRACKET: 5,
 };
 
 module.exports = pointsSystem;

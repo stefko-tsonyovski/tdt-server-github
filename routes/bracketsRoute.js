@@ -12,23 +12,24 @@ const {
   getAllBracketsByTournamentIdAndRoundId,
   createBracket,
   updateBracket,
+  updateFinishedBracket,
   getBracket,
 } = require("../controllers/bracketsController");
 
 router
   .route("/")
-  .get(authenticateUser, getAllBrackets)
-  .post(authenticateUser, authorizePermissions("admin", "owner"), createBracket)
+  .get(getAllBrackets)
+  .post(authorizePermissions("admin", "owner"), createBracket)
   .patch(updateBracket);
 
-router
-  .route("/byTournament")
-  .get(authenticateUser, getAllBracketsByTournamentId);
+router.route("/updateFinished").patch(updateFinishedBracket);
+
+router.route("/byTournament").get(getAllBracketsByTournamentId);
 
 router
   .route("/byTournamentAndRound")
   .get(getAllBracketsByTournamentIdAndRoundId);
 
-router.route("/:id").get(authenticateUser, getBracket);
+router.route("/:id").get(getBracket);
 
 module.exports = router;

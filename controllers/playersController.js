@@ -45,7 +45,7 @@ const getAll = async (req, res) => {
 
   const countries = await Country.find({}).lean();
 
-  players = players.slice(0, 100).map((player) => {
+  players = players.map((player) => {
     const country = countries.find(
       (c) => c.name.toLowerCase() === player.country.toLowerCase()
     );
@@ -73,7 +73,6 @@ const getAllPlayers = async (req, res) => {
   }
 
   let players = await Player.find({}).sort("ranking").lean();
-  players = players.slice(0, 100);
 
   const userPlayers = await UserPlayer.find({
     weekId: selected.value,
@@ -651,10 +650,37 @@ const calculatePointsForUserPlayers = async (req, res) => {
       const homeMatch = homeMatches[j];
       await UserMatchPlayer.create({ userId, playerId, matchId: homeMatch.id });
 
-      let { homeSets, homeSet1, homeSet2, homeSet3 } = homeMatch;
+      let {
+        homeSets,
+        homeSet1,
+        homeSet2,
+        homeSet3,
+        homeSet4,
+        homeSet5,
+        homeAces,
+        homeDoubleFaults,
+        homeWinners,
+        homeUnforcedErrors,
+      } = homeMatch;
 
-      if (homeSet3 === "n/a" || homeSet3 === "No 3rd set") {
+      if (homeSet1 < 0) {
+        homeSet1 = 0;
+      }
+
+      if (homeSet2 < 0) {
+        homeSet2 = 0;
+      }
+
+      if (homeSet3 < 0) {
         homeSet3 = 0;
+      }
+
+      if (homeSet4 < 0) {
+        homeSet4 = 0;
+      }
+
+      if (homeSet5 < 0) {
+        homeSet5 = 0;
       }
 
       const pointsForWin =
@@ -665,6 +691,12 @@ const calculatePointsForUserPlayers = async (req, res) => {
         Number(homeSet1) * pointsSystem.GAME +
         Number(homeSet2) * pointsSystem.GAME +
         Number(homeSet3) * pointsSystem.GAME +
+        Number(homeSet4) * pointsSystem.GAME +
+        Number(homeSet5) * pointsSystem.GAME +
+        Number(homeAces) * pointsSystem.ACE +
+        Number(homeDoubleFaults) * pointsSystem.DOUBLE_FAULT +
+        Number(homeWinners) * pointsSystem.WINNER +
+        Number(homeUnforcedErrors) * pointsSystem.UNFORCED_ERROR +
         pointsForWin;
     }
 
@@ -672,10 +704,37 @@ const calculatePointsForUserPlayers = async (req, res) => {
       const awayMatch = awayMatches[j];
       await UserMatchPlayer.create({ userId, playerId, matchId: awayMatch.id });
 
-      let { awaySets, awaySet1, awaySet2, awaySet3 } = awayMatch;
+      let {
+        awaySets,
+        awaySet1,
+        awaySet2,
+        awaySet3,
+        awaySet4,
+        awaySet5,
+        awayAces,
+        awayDoubleFaults,
+        awayWinners,
+        awayUnforcedErrors,
+      } = awayMatch;
 
-      if (awaySet3 === "n/a" || awaySet3 === "No 3rd set") {
+      if (awaySet1 < 0) {
+        awaySet1 = 0;
+      }
+
+      if (awaySet2 < 0) {
+        awaySet2 = 0;
+      }
+
+      if (awaySet3 < 0) {
         awaySet3 = 0;
+      }
+
+      if (awaySet4 < 0) {
+        awaySet4 = 0;
+      }
+
+      if (awaySet5 < 0) {
+        awaySet5 = 0;
       }
 
       const pointsForWin =
@@ -686,6 +745,12 @@ const calculatePointsForUserPlayers = async (req, res) => {
         Number(awaySet1) * pointsSystem.GAME +
         Number(awaySet2) * pointsSystem.GAME +
         Number(awaySet3) * pointsSystem.GAME +
+        Number(awaySet4) * pointsSystem.GAME +
+        Number(awaySet5) * pointsSystem.GAME +
+        Number(awayAces) * pointsSystem.ACE +
+        Number(awayDoubleFaults) * pointsSystem.DOUBLE_FAULT +
+        Number(awayWinners) * pointsSystem.WINNER +
+        Number(awayUnforcedErrors) * pointsSystem.UNFORCED_ERROR +
         pointsForWin;
     }
 
