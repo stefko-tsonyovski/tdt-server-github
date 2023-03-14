@@ -179,6 +179,104 @@ const updateBracket = async (req, res) => {
   res.status(StatusCodes.OK).json({ bracket, match });
 };
 
+const updateFinishedBracket = async (req, res) => {
+  const {
+    name,
+    tournamentName,
+    roundName,
+    winnerName,
+    homeSets,
+    awaySets,
+    homeSet1,
+    homeSet2,
+    homeSet3,
+    homeSet4,
+    homeSet5,
+    awaySet1,
+    awaySet2,
+    awaySet3,
+    awaySet4,
+    awaySet5,
+    homeAces,
+    homeDoubleFaults,
+    homeWinners,
+    homeUnforcedErrors,
+    awayAces,
+    awayDoubleFaults,
+    awayWinners,
+    awayUnforcedErrors,
+  } = req.body;
+
+  const winner = await Player.findOne({ name: winnerName }).lean();
+  if (!winner) {
+    throw new NotFoundError("Winner does not exist!");
+  }
+
+  const tournament = await Tournament.findOne({
+    name: tournamentName,
+    season: 2023,
+  }).lean();
+
+  if (!tournament) {
+    throw new NotFoundError("Tournament does not exist!");
+  }
+
+  const round = await Round.findOne({ name: roundName }).lean();
+  if (!round) {
+    throw new NotFoundError("Round does not exist!");
+  }
+
+  const bracket = await Bracket.findOneAndUpdate(
+    {
+      name,
+      tournamentId: tournament.id,
+      roundId: round._id,
+    },
+    { winnerId: winner.id },
+    { runValidators: true, new: true }
+  );
+
+  if (!bracket) {
+    throw new NotFoundError("Bracket does not exist!");
+  }
+
+  const match = await Match.findOneAndUpdate(
+    {
+      homeId: bracket.homeId,
+      awayId: bracket.awayId,
+      tournamentId: tournament.id,
+      roundId: round._id,
+    },
+    {
+      winnerId: winner.id,
+      status: "finished",
+      homeSets,
+      awaySets,
+      homeSet1,
+      homeSet2,
+      homeSet3,
+      homeSet4,
+      homeSet5,
+      awaySet1,
+      awaySet2,
+      awaySet3,
+      awaySet4,
+      awaySet5,
+      homeAces,
+      homeDoubleFaults,
+      homeWinners,
+      homeUnforcedErrors,
+      awayAces,
+      awayDoubleFaults,
+      awayWinners,
+      awayUnforcedErrors,
+    },
+    { runValidators: true, new: true }
+  );
+
+  res.status(StatusCodes.OK).json({ bracket, match });
+};
+
 module.exports = {
   getAllBrackets,
   getAllBracketsByTournamentId,
@@ -186,4 +284,5 @@ module.exports = {
   createBracket,
   getBracket,
   updateBracket,
+  updateFinishedBracket,
 };

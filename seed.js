@@ -399,7 +399,6 @@ const seedPlayers = async () => {
     const jsonString = await readFile(absolutePath);
     const response = JSON.parse(jsonString);
 
-    const dbPlayers = await Player.find({}).sort("id");
     const players = Array.from(response.data);
 
     for (let i = 0; i < players.length; i++) {
@@ -412,6 +411,37 @@ const seedPlayers = async () => {
         points: player.Points,
         ranking: player.Rank,
       });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const updatePlayersFromAPI = async () => {
+  try {
+    const absolutePath = path.join(__dirname, "atp-rankings.json");
+    const jsonString = await readFile(absolutePath);
+    const response = JSON.parse(jsonString);
+
+    const players = Array.from(response.data);
+
+    for (let i = 0; i < players.length; i++) {
+      const player = players[i];
+
+      const updatedPlayer = await Player.findOneAndUpdate(
+        {
+          ultimateTennisID: player.id,
+        },
+        {
+          points: player.Points,
+          ranking: player.Rank,
+        },
+        { runValidators: true, new: true }
+      );
+
+      if (!updatedPlayer) {
+        console.log(`${player.Name} does not exist!`);
+      }
     }
   } catch (error) {
     console.log(error);
@@ -621,7 +651,7 @@ const start = async () => {
     // await seedPlayers();
 
     // Seed matches
-    await seedMatches("Dubai Duty Free Tennis Championships");
+    // await seedMatches("Dubai Duty Free Tennis Championships");
 
     // Update players
     // await updatePlayers();

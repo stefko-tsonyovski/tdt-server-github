@@ -32,40 +32,40 @@ const MatchSchema = new mongoose.Schema({
     type: Number,
   },
   homeSets: {
-    type: String,
+    type: Number,
   },
   awaySets: {
-    type: String,
+    type: Number,
   },
   homeSet1: {
-    type: String,
+    type: Number,
   },
   homeSet2: {
-    type: String,
+    type: Number,
   },
   homeSet3: {
-    type: String,
+    type: Number,
   },
   homeSet4: {
-    type: String,
+    type: Number,
   },
   homeSet5: {
-    type: String,
+    type: Number,
   },
   awaySet1: {
-    type: String,
+    type: Number,
   },
   awaySet2: {
-    type: String,
+    type: Number,
   },
   awaySet3: {
-    type: String,
+    type: Number,
   },
   awaySet4: {
-    type: String,
+    type: Number,
   },
   awaySet5: {
-    type: String,
+    type: Number,
   },
   homeAces: {
     type: Number,

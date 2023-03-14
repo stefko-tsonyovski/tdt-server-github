@@ -9,6 +9,7 @@ const Match = require("../models/Match");
 
 const { StatusCodes } = require("http-status-codes");
 const { NotFoundError, BadRequestError } = require("../errors");
+const { BRACKET } = require("../utils/pointsSystem");
 
 const havePickBeenMade = async (req, res) => {
   const { bracketId } = req.query;
@@ -132,6 +133,15 @@ const verifyPick = async (req, res) => {
 
   const { homeId, awayId, tournamentId } = bracket;
 
+  let homePicks = await Pick.find({ playerId: homeId }).lean();
+  homePicks = homePicks.filter((h) => h.userId !== userId);
+
+  let awayPicks = await Pick.find({ playerId: awayId }).lean();
+  awayPicks = awayPicks.filter((a) => a.userId !== userId);
+
+  const homeVotes = homePicks.length > 0 ? homePicks.length : 1;
+  const awayVotes = awayPicks.length > 0 ? awayPicks.length : 1;
+
   const match = await Match.findOne({ homeId, awayId, tournamentId }).lean();
   if (match.status === "pending") {
     throw new BadRequestError("Result for this match is not available yet!");
@@ -148,8 +158,6 @@ const verifyPick = async (req, res) => {
     (w) => pickDate >= new Date(w.from) && pickDate <= new Date(w.to)
   );
 
-  console.log(week);
-
   if (!week) {
     throw new NotFoundError("Week does not exist!");
   }
@@ -161,14 +169,13 @@ const verifyPick = async (req, res) => {
   );
 
   if (pick.playerId === bracket.winnerId) {
-    const round = await Round.findOne({ _id: bracket.roundId }).lean();
+    let pickPoints = 0;
 
-    if (!round) {
-      throw new NotFoundError("Round not found!");
+    if (pick.playerId === homeId) {
+      pickPoints = BRACKET * awayVotes;
+    } else if (pick.playerId === awayId) {
+      pickPoints = BRACKET & homeVotes;
     }
-
-    const { name: roundName } = round;
-    let pickPoints = 5;
 
     const userWeek = await UserWeek.findOne({
       userId,
