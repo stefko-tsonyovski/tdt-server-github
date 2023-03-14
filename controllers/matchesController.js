@@ -205,7 +205,7 @@ const getMatchesByTournamentIdGroupedByRoundId = async (req, res) => {
   res.status(StatusCodes.OK).json({ groupedMatches: matches });
 };
 
-const getMatchesByPlayerGroupedByTournamentId = async (req, res) => {
+const getMatchesByPlayerIdGroupedByTournamentId = async (req, res) => {
   const { playerId } = req.query;
 
   const players = await Player.find({}).lean();
@@ -259,8 +259,16 @@ const getMatchesByPlayerGroupedByTournamentId = async (req, res) => {
       (tournament) => tournament.id === Number(key)
     );
 
+    const country = countries.find(
+      (c) => c.name?.toLowerCase() === tournament.countryCode.toLowerCase()
+    );
+    console.log(country.key);
+
     return {
-      tournament,
+      tournament: {
+        ...tournament,
+        countryKey: country.key,
+      },
       matches: groupedMatches[key],
     };
   });
@@ -478,7 +486,7 @@ module.exports = {
   getSingleMatchManual,
   getMatchesByTournamentIdAndRoundId,
   getMatchesByTournamentIdGroupedByRoundId,
-  getMatchesByPlayerGroupedByTournamentId,
+  getMatchesByPlayerIdGroupedByTournamentId,
   getLastMatchesByPlayer,
   getLastHedToHeadMatches,
   createMatch,
