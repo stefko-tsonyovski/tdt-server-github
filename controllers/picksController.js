@@ -134,10 +134,7 @@ const verifyPick = async (req, res) => {
   const { homeId, awayId, tournamentId } = bracket;
 
   let homePicks = await Pick.find({ playerId: homeId }).lean();
-  homePicks = homePicks.filter((h) => h.userId !== userId);
-
   let awayPicks = await Pick.find({ playerId: awayId }).lean();
-  awayPicks = awayPicks.filter((a) => a.userId !== userId);
 
   const homeVotes = homePicks.length > 0 ? homePicks.length : 1;
   const awayVotes = awayPicks.length > 0 ? awayPicks.length : 1;
@@ -172,9 +169,9 @@ const verifyPick = async (req, res) => {
     let pickPoints = 0;
 
     if (pick.playerId === homeId) {
-      pickPoints = BRACKET * awayVotes;
+      pickPoints = awayVotes;
     } else if (pick.playerId === awayId) {
-      pickPoints = BRACKET & homeVotes;
+      pickPoints = homeVotes;
     }
 
     const userWeek = await UserWeek.findOne({

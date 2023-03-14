@@ -3,6 +3,7 @@ const Tournament = require("../models/Tournament");
 const Round = require("../models/Round");
 const Player = require("../models/Player");
 const Match = require("../models/Match");
+const Pick = require("../models/Pick");
 
 const { StatusCodes } = require("http-status-codes");
 const { NotFoundError, BadRequestError } = require("../errors");
@@ -42,6 +43,14 @@ const getAllBracketsByTournamentIdAndRoundId = async (req, res) => {
   for (let i = 0; i < brackets.length; i++) {
     const bracket = brackets[i];
 
+    const { homeId, awayId } = bracket;
+
+    let homePicks = await Pick.find({ playerId: homeId }).lean();
+    let awayPicks = await Pick.find({ playerId: awayId }).lean();
+
+    const homeVotes = homePicks.length;
+    const awayVotes = awayPicks.length;
+
     const homePlayer = await Player.findOne({ id: bracket.homeId }).lean();
     const awayPlayer = await Player.findOne({ id: bracket.awayId }).lean();
 
@@ -49,6 +58,8 @@ const getAllBracketsByTournamentIdAndRoundId = async (req, res) => {
       ...bracket,
       homePlayer,
       awayPlayer,
+      homeVotes,
+      awayVotes,
     };
 
     resultBrackets.push(finalBracket);
