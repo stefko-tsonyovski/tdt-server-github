@@ -9,7 +9,7 @@ const {
   getMatchesByTournamentIdAndRoundId,
   getMatchesByTournamentIdAndDate,
   getMatchesByTournamentIdGroupedByRoundId,
-  getMatchesByPlayerGroupedByTournamentId,
+  getMatchesByPlayerIdGroupedByTournamentId,
   getLastMatchesByPlayer,
   getLastHedToHeadMatches,
 } = require("../controllers/matchesController");
@@ -18,25 +18,19 @@ const {
   authorizePermissions,
 } = require("../middleware/authentication");
 
-router.route("/lastH2HByPlayer").post(getLastMatchesByPlayer);
+router.route("/lastH2HByPlayer").post(getLastHedToHeadMatches);
 router.route("/lastByPlayer").post(getLastMatchesByPlayer);
-router
-  .route("/")
-  .post(authorizePermissions("admin", "owner"), createMatch);
+router.route("/").post(authorizePermissions("admin", "owner"), createMatch);
 
-router
-  .route("/byTournamentAndRound")
-  .get(getMatchesByTournamentIdAndRoundId);
+router.route("/byTournamentAndRound").get(getMatchesByTournamentIdAndRoundId);
 
 router
   .route("/byTournamentGroupByRound")
   .get(getMatchesByTournamentIdGroupedByRoundId);
-router
-  .route("/byTournamentAndDate")
-  .get(getMatchesByTournamentIdAndDate);
+router.route("/byTournamentAndDate").get(getMatchesByTournamentIdAndDate);
 router
   .route("/byPlayerGroupByTournament")
-  .get(getMatchesByPlayerGroupedByTournamentId);
+  .get(getMatchesByPlayerIdGroupedByTournamentId);
 
 router
   .route("/:id")
