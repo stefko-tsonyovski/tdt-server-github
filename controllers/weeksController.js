@@ -44,7 +44,7 @@ const getCountdown = async (req, res) => {
   }
 
   const countdownDateTime = new Date(week.from).getTime();
-  const twoHours = 1000 * 60 * 60 * 2;
+  const twoHours = process.env.PORT ? 1000 * 60 * 60 * 2 : 0;
   const currentTime = new Date(Date.now() + twoHours).getTime();
   const remainingDayTime = countdownDateTime - currentTime;
   const totalDays = Math.floor(remainingDayTime / (1000 * 60 * 60 * 24));
@@ -66,9 +66,8 @@ const getCountdown = async (req, res) => {
 };
 
 const getWeekByCurrentDate = async (req, res) => {
-  const twoHours = 1000 * 60 * 60 * 2;
+  const twoHours = process.env.PORT ? 1000 * 60 * 60 * 2 : 0;
   const date = new Date(Date.now() + twoHours);
-  console.log(date);
 
   const weeks = await Week.find({}).lean();
 
