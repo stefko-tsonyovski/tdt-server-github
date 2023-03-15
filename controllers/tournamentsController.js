@@ -94,9 +94,7 @@ const getTournamentsByDate = async (req, res) => {
       }
 
       return t;
-    })
-    .filter((t) => t.matchesCount > 0);
-
+    });
   res.status(StatusCodes.OK).json({ tournaments });
 };
 

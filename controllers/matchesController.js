@@ -260,14 +260,13 @@ const getMatchesByPlayerIdGroupedByTournamentId = async (req, res) => {
     );
 
     const country = countries.find(
-      (c) => c.name?.toLowerCase() === tournament.countryCode.toLowerCase()
+      (c) => c.code?.toLowerCase() === tournament.countryCode.toLowerCase()
     );
-    console.log(country.key);
 
     return {
       tournament: {
         ...tournament,
-        countryKey: country.key,
+        countryKey: country?.key,
       },
       matches: groupedMatches[key],
     };
@@ -346,12 +345,12 @@ const getLastMatchesByPlayer = async (req, res) => {
     })
     .filter((match) => match);
 
-  console.log(matches);
   res.status(StatusCodes.OK).json({ player, matches });
 };
 
 const getLastHedToHeadMatches = async (req, res) => {
   const { skipMatchId, homeId, awayId, surface, email } = req.body;
+
   const user = await User.findOne({ email }).lean();
 
   if (!user) {
@@ -381,9 +380,9 @@ const getLastHedToHeadMatches = async (req, res) => {
   const awayPlayer = await Player.findOne({ id: awayId }).lean();
 
   // filter matches by surface
-
+  let result = [];
   if (surface.toLowerCase() !== "all") {
-    matches = matches.filter((match) => {
+    result = matches.filter((match) => {
       const tournament = tournaments.find(
         (tournament) => tournament.id === match.tournamentId
       );
@@ -394,7 +393,7 @@ const getLastHedToHeadMatches = async (req, res) => {
     });
   }
 
-  matches = matches.map((match) => {
+  result = result.map((match) => {
     const favoriteId = favorites.find(
       (favorite) =>
         favorite.matchId === match.id && favorite.userId === user._id.toString()
@@ -408,7 +407,7 @@ const getLastHedToHeadMatches = async (req, res) => {
     };
   });
 
-  res.status(StatusCodes).json({ matches });
+  res.status(StatusCodes.OK).json({ matches: result });
 };
 
 const createMatch = async (req, res) => {

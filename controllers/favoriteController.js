@@ -27,9 +27,14 @@ const createFavorite = async (req, res) => {
 };
 
 const getFavoriteMatchesByUser = async (req, res) => {
-  const { userId } = req.user;
+  const { email } = req.query;
+  const user = await User.findOne({ email }).lean();
 
-  const favorites = await Favorite.find({ userId }).lean();
+  if (!user) {
+    throw new NotFoundError(`Cannot find user with email ${email}`);
+  }
+
+  const favorites = await Favorite.find({ userId: user._id.toString() }).lean();
   let matches = await Match.find({
     id: {
       $in: favorites.map((favorite) => favorite.matchId),
@@ -65,10 +70,12 @@ const getFavoriteMatchesByUser = async (req, res) => {
       const awayPlayer = players.find((p) => {
         return p.id === match.awayId;
       });
-      const favoriteId = favorites.find(
-        (favorite) =>
-          favorite.matchId === match.id && favorite.userId === userId
-      )?._id;
+      const favoriteId = favorites.find((favorite) => {
+        return (
+          favorite.matchId === match.id &&
+          favorite.userId === user._id.toString()
+        );
+      })?._id;
       const tournament = tournaments.find(
         (tournament) => tournament.id === match.tournamentId
       );
@@ -136,8 +143,17 @@ const getFavoriteMatchesByUser = async (req, res) => {
     }, {});
 
     const resultMsByTournament = Object.keys(msByTournament).map((key) => {
+      const tournament = msByTournament[key][0].tournament;
+      const country = countries.find(
+        (c) => c.code?.toLowerCase() === tournament.countryCode?.toLowerCase()
+      );
+
       return {
-        tournament: msByTournament[key][0].tournament,
+        tournament: {
+          ...tournament,
+          countryName: country.name,
+          countryKey: country.key,
+        },
         matches: msByTournament[key],
       };
     });
