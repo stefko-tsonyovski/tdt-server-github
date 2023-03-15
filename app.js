@@ -85,6 +85,8 @@ app.use("/api/v1", searchesRoute);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
+module.exports = app;
+
 const port = process.env.PORT || 5000;
 
 const start = async () => {
