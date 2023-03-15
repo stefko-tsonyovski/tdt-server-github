@@ -93,7 +93,8 @@ const createPick = async (req, res) => {
   }
 
   const start = new Date(match.date);
-  const current = new Date();
+  const twoHours = 1000 * 60 * 60 * 2;
+  const current = new Date(Date.now() + twoHours);
 
   if (current >= start) {
     throw new BadRequestError("Deadline passed!");
@@ -204,7 +205,8 @@ const calculateWeeklyBracketPoints = async (req, res) => {
 
   const start = new Date(week.from);
   const end = new Date(week.to);
-  const current = new Date();
+  const twoHours = 1000 * 60 * 60 * 2;
+  const current = new Date(Date.now() + twoHours);
 
   // UNCOMMENT IN PRODUCTION
 
@@ -319,7 +321,8 @@ const calculateTotalBracketPoints = async (req, res) => {
 
   const { _id: userId } = user;
 
-  const currentDate = new Date();
+  const twoHours = 1000 * 60 * 60 * 2;
+  const currentDate = new Date(Date.now() + twoHours);
   const userWeeks = await UserWeek.find({ userId }).lean();
   let totalBracketPoints = 0;
 
