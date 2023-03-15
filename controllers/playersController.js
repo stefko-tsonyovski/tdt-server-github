@@ -265,8 +265,7 @@ const addPlayerInTeam = async (req, res) => {
   }
 
   const start = new Date(week.from);
-  const twoHours = 1000 * 60 * 60 * 2;
-  const current = new Date(Date.now() + twoHours);
+  const current = new Date();
 
   if (current >= start) {
     throw new BadRequestError("Deadline passed!");
@@ -349,8 +348,7 @@ const performSubstitution = async (req, res) => {
   }
 
   const end = new Date(week.to);
-  const twoHours = 1000 * 60 * 60 * 2;
-  const current = new Date(Date.now() + twoHours);
+  const current = new Date();
 
   if (current >= end) {
     throw new BadRequestError("Deadline passed!");
@@ -406,8 +404,7 @@ const deletePlayerInTeam = async (req, res) => {
   }
 
   const start = new Date(week.from);
-  const twoHours = 1000 * 60 * 60 * 2;
-  const current = new Date(Date.now() + twoHours);
+  const current = new Date();
 
   if (current >= start) {
     throw new BadRequestError("Deadline passed!");
@@ -466,8 +463,7 @@ const addBallToUserPlayer = async (req, res) => {
   }
 
   const start = new Date(week.from);
-  const twoHours = 1000 * 60 * 60 * 2;
-  const current = new Date(Date.now() + twoHours);
+  const current = new Date();
 
   if (current >= start) {
     throw new BadRequestError("Deadline passed!");
@@ -532,8 +528,7 @@ const deleteBallFromUserPlayer = async (req, res) => {
     throw new NotFoundError("Week does not exist!");
   }
   const start = new Date(week.from);
-  const twoHours = 1000 * 60 * 60 * 2;
-  const current = new Date(Date.now() + twoHours);
+  const current = new Date();
 
   if (current >= start) {
     throw new BadRequestError("Deadline passed!");
@@ -596,8 +591,7 @@ const calculatePointsForUserPlayers = async (req, res) => {
 
   const start = new Date(week.from);
   const end = new Date(week.to);
-  const twoHours = 1000 * 60 * 60 * 2;
-  const current = new Date(Date.now() + twoHours);
+  const current = new Date();
 
   // UNCOMMENT IN PRODUCTION
 
