@@ -45,8 +45,14 @@ const getAllBracketsByTournamentIdAndRoundId = async (req, res) => {
 
     const { homeId, awayId } = bracket;
 
-    let homePicks = await Pick.find({ playerId: homeId }).lean();
-    let awayPicks = await Pick.find({ playerId: awayId }).lean();
+    let homePicks = await Pick.find({
+      playerId: homeId,
+      bracketId: bracket._id,
+    }).lean();
+    let awayPicks = await Pick.find({
+      playerId: awayId,
+      bracketId: bracket._id,
+    }).lean();
 
     const homeVotes = homePicks.length;
     const awayVotes = awayPicks.length;
@@ -218,6 +224,8 @@ const updateFinishedBracket = async (req, res) => {
     awayUnforcedErrors,
   } = req.body;
 
+  // Notification -
+
   const winner = await Player.findOne({ name: winnerName }).lean();
   if (!winner) {
     throw new NotFoundError("Winner does not exist!");
@@ -284,6 +292,8 @@ const updateFinishedBracket = async (req, res) => {
     },
     { runValidators: true, new: true }
   );
+
+  // Favorites by matchId
 
   res.status(StatusCodes.OK).json({ bracket, match });
 };
