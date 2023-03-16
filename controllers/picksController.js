@@ -134,8 +134,14 @@ const verifyPick = async (req, res) => {
 
   const { homeId, awayId, tournamentId } = bracket;
 
-  let homePicks = await Pick.find({ playerId: homeId }).lean();
-  let awayPicks = await Pick.find({ playerId: awayId }).lean();
+  let homePicks = await Pick.find({
+    playerId: homeId,
+    bracketId: bracket._id,
+  }).lean();
+  let awayPicks = await Pick.find({
+    playerId: awayId,
+    bracketId: bracket._id,
+  }).lean();
 
   const homeVotes = homePicks.length > 0 ? homePicks.length : 1;
   const awayVotes = awayPicks.length > 0 ? awayPicks.length : 1;
