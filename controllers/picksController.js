@@ -155,13 +155,14 @@ const verifyPick = async (req, res) => {
     throw new BadRequestError("Pick has been already verified!");
   }
 
-  const pickDate = new Date(match.date);
-  const weeks = await Week.find({}).lean();
+  const tournament = await Tournament.findOne({
+    id: match.tournamentId,
+  }).lean();
+  if (!tournament) {
+    throw new NotFoundError("Tournament does not exist!");
+  }
 
-  const week = weeks.find(
-    (w) => pickDate >= new Date(w.from) && pickDate <= new Date(w.to)
-  );
-
+  const week = await Week.findOne({ _id: tournament.weekId }).lean();
   if (!week) {
     throw new NotFoundError("Week does not exist!");
   }
