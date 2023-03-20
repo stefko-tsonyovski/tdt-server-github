@@ -594,11 +594,6 @@ const calculatePointsForUserPlayers = async (req, res) => {
     throw new NotFoundError("Week does not exist!");
   }
 
-  const start = new Date(week.from);
-  const end = new Date(week.to);
-  const twoHours = 1000 * 60 * 60 * 2;
-  const current = new Date(Date.now() + twoHours);
-
   const userPlayers = await UserPlayer.find({
     weekId,
     userId,
@@ -628,17 +623,11 @@ const calculatePointsForUserPlayers = async (req, res) => {
     }).lean();
 
     homeMatches = homeMatches.filter(
-      (m) =>
-        !userMatchPlayers.some((ump) => ump.matchId === m.id) &&
-        new Date(m.date) >= start &&
-        new Date(m.date) <= end
+      (m) => !userMatchPlayers.some((ump) => ump.matchId === m.id)
     );
 
     awayMatches = awayMatches.filter(
-      (m) =>
-        !userMatchPlayers.some((ump) => ump.matchId === m.id) &&
-        new Date(m.date) >= start &&
-        new Date(m.date) <= end
+      (m) => !userMatchPlayers.some((ump) => ump.matchId === m.id)
     );
 
     let homePoints = 0;
