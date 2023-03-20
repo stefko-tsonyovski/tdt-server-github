@@ -599,14 +599,6 @@ const calculatePointsForUserPlayers = async (req, res) => {
   const twoHours = 1000 * 60 * 60 * 2;
   const current = new Date(Date.now() + twoHours);
 
-  // UNCOMMENT IN PRODUCTION
-
-  if (!(current >= start && current <= end)) {
-    throw new BadRequestError(
-      "You cannot update points for this week yet or this week has already finished!"
-    );
-  }
-
   const userPlayers = await UserPlayer.find({
     weekId,
     userId,
