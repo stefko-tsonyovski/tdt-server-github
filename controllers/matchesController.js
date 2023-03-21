@@ -28,6 +28,8 @@ const getMatchesByTournamentIdAndDate = async (req, res) => {
   }
 
   let matches = await Match.find({ tournamentId }).lean();
+  matches = matches.filter((m) => m.homeId > 0 && m.awayId > 0);
+
   const players = await Player.find({
     id: {
       $in: [
@@ -160,8 +162,8 @@ const getMatchesByTournamentIdAndRoundId = async (req, res) => {
 
     return {
       ...match,
-      homePlayer: { ...homePlayer },
-      awayPlayer: { ...awayPlayer },
+      homePlayer: homePlayer && homePlayer.id > 0 ? { ...homePlayer } : null,
+      awayPlayer: awayPlayer && awayPlayer.id > 0 ? { ...awayPlayer } : null,
     };
   });
   res.status(StatusCodes.OK).json({ matches });
@@ -174,16 +176,18 @@ const getMatchesByTournamentIdGroupedByRoundId = async (req, res) => {
   let rounds = await Round.find({}).lean();
   let players = await Player.find({}).lean();
 
-  matches = matches.map((match) => {
-    const homePlayer = players.find((player) => player.id === match.homeId);
-    const awayPlayer = players.find((player) => player.id === match.awayId);
+  matches = matches
+    .filter((m) => m.homeId > 0 && m.awayId > 0)
+    .map((match) => {
+      const homePlayer = players.find((player) => player.id === match.homeId);
+      const awayPlayer = players.find((player) => player.id === match.awayId);
 
-    return {
-      ...match,
-      homePlayer: { ...homePlayer },
-      awayPlayer: { ...awayPlayer },
-    };
-  });
+      return {
+        ...match,
+        homePlayer: { ...homePlayer },
+        awayPlayer: { ...awayPlayer },
+      };
+    });
 
   const matchesByRound = matches.reduce((acc, value) => {
     if (!acc[value.roundId]) {
@@ -222,6 +226,7 @@ const getMatchesByPlayerIdGroupedByTournamentId = async (req, res) => {
   }).lean();
 
   let result = matches
+    .filter((m) => m.homeId > 0 && m.awayId > 0)
     .map((match) => {
       const homePlayer = players.find((player) => player.id === match.homeId);
       const awayPlayer = players.find((player) => player.id === match.awayId);
@@ -289,6 +294,8 @@ const getLastMatchesByPlayer = async (req, res) => {
       $not: { $eq: skipMatchId },
     },
   }).lean();
+
+  matches = matches.filter((m) => m.homeId > 0 && m.awayId > 0);
 
   const matchIds = matches.map((match) => match.id);
 
@@ -360,7 +367,7 @@ const getLastHedToHeadMatches = async (req, res) => {
   const favorites = await Favorite.find({}).lean();
   const tournaments = await Tournament.find({}).lean();
 
-  const matches = await Match.find({
+  let matches = await Match.find({
     $or: [
       {
         homeId: homeId,
@@ -375,6 +382,8 @@ const getLastHedToHeadMatches = async (req, res) => {
       $not: { $eq: skipMatchId },
     },
   }).lean();
+
+  matches = matches.filter((m) => m.homeId > 0 && m.awayId > 0);
 
   const homePlayer = await Player.findOne({ id: homeId }).lean();
   const awayPlayer = await Player.findOne({ id: awayId }).lean();
