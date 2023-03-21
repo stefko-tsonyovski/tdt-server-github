@@ -62,8 +62,8 @@ const getAllBracketsByTournamentIdAndRoundId = async (req, res) => {
 
     const finalBracket = {
       ...bracket,
-      homePlayer,
-      awayPlayer,
+      homePlayer: !homePlayer || homePlayer.id < 0 ? null : homePlayer,
+      awayPlayer: !awayPlayer || awayPlayer.id < 0 ? null : awayPlayer,
       homeVotes,
       awayVotes,
     };
