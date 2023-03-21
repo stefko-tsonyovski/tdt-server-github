@@ -37,6 +37,13 @@ const getTournaments = async (req, res) => {
 
 const getTournamentsByDate = async (req, res) => {
   const { date, email } = req.query;
+
+  const tokens = date.split("/");
+
+  const month = tokens[0];
+  const day = tokens[1];
+  const year = "20" + tokens[2];
+
   // const { userId } = req.user;
   let tournaments = await Tournament.find({}).sort({ city: "asc" }).lean();
   const countries = await Country.find({}).lean();
@@ -48,7 +55,8 @@ const getTournamentsByDate = async (req, res) => {
     .filter((t) => {
       const startDate = new Date(t.startDate);
       const endDate = new Date(t.endDate);
-      const parsedDate = new Date(date);
+      const parsedDate = new Date(`${year}-${month}-${day}`);
+
       return parsedDate >= startDate && parsedDate <= endDate;
     })
     .map((t) => {
@@ -62,7 +70,12 @@ const getTournamentsByDate = async (req, res) => {
         .filter((m) => {
           const parsedDate = new Date(date).toLocaleDateString("en-CA");
           const matchDate = new Date(m.date).toLocaleDateString("en-CA");
-          return parsedDate === matchDate && t.id === m.tournamentId;
+          return (
+            parsedDate === matchDate &&
+            t.id === m.tournamentId &&
+            m.homeId > 0 &&
+            m.awayId > 0
+          );
         })
         .map((match) => {
           if (
