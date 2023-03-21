@@ -674,6 +674,9 @@ const start = async () => {
     // Update tournaments
     // await updateTournaments();
 
+    // Update players from API
+    // await updatePlayersFromAPI();
+
     console.log("Seeding successful!");
   } catch (error) {
     console.log(error);

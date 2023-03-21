@@ -66,6 +66,10 @@ const createPick = async (req, res) => {
     throw new NotFoundError("Bracket not found!");
   }
 
+  if (bracket.homeId < 0 || bracket.awayId < 0) {
+    throw new BadRequestError("There should be 2 players available!");
+  }
+
   const tournament = await Tournament.findOne({
     id: bracket.tournamentId,
   }).lean();
@@ -79,8 +83,6 @@ const createPick = async (req, res) => {
   if (!week) {
     throw new NotFoundError("Week not found!");
   }
-
-  // UNCOMMENT IN PRODUCTION !!!!!!
 
   const match = await Match.findOne({
     tournamentId: tournament.id,
