@@ -2,9 +2,11 @@ const League = require("../models/League");
 const User = require("../models/User");
 const Request = require("../models/Request");
 const LeagueInvitation = require("../models/LeagueInvitation");
+const UserToken = require("../models/UserToken");
 
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../errors");
+const { Expo } = require("expo-server-sdk");
 
 // view top 200, create, edit, delete, search, join, invitation requests, kick players from league, leave league, view your league
 
@@ -103,6 +105,64 @@ const updateLeague = async (req, res) => {
     throw new BadRequestError("League with such a name already exists!");
   }
 
+  let members = await User.find({ leagueId: league._id }).lean();
+  members = members.filter((m) => m._id.toString() !== userId.toString());
+
+  for (let i = 0; i < members.length; i++) {
+    const member = members[i];
+    const { _id: userId } = member;
+
+    const userToken = await UserToken.findOne({ userId }).lean();
+    if (!userToken) {
+      throw new NotFoundError("User token does not exist!");
+    }
+
+    // Create a new Expo SDK client
+    // optionally providing an access token if you have enabled push security
+    let expo = new Expo();
+
+    // Create the messages that you want to send to clients
+    let messages = [];
+    // Each push token looks like ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
+
+    // Check that all your push tokens appear to be valid Expo push tokens
+    if (!Expo.isExpoPushToken(userToken.token)) {
+      throw new BadRequestError("Invalid expo push token!");
+    }
+
+    // Construct a message (see https://docs.expo.io/push-notifications/sending-notifications/)
+    messages.push({
+      to: userToken.token,
+      sound: "default",
+      body: `${
+        user.firstName + " " + user.lastName
+      } updated your league's name!`,
+      data: { withSome: "data" },
+    });
+
+    // The Expo push notification service accepts batches of notifications so
+    // that you don't need to send 1000 requests to send 1000 notifications. We
+    // recommend you batch your notifications to reduce the number of requests
+    // and to compress them (notifications with similar content will get
+    // compressed).
+    let chunks = expo.chunkPushNotifications(messages);
+    let tickets = [];
+    (async () => {
+      // Send the chunks to the Expo push notification service. There are
+      // different strategies you could use. A simple one is to send one chunk at a
+      // time, which nicely spreads the load out over time:
+      for (let chunk of chunks) {
+        let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        console.log(ticketChunk);
+        tickets.push(...ticketChunk);
+        // NOTE: If a ticket contains an error code in ticket.details.error, you
+        // must handle it appropriately. The error codes are listed in the Expo
+        // documentation:
+        // https://docs.expo.io/push-notifications/sending-notifications/#individual-errors
+      }
+    })();
+  }
+
   const updatedLeague = await League.findOneAndUpdate(
     { _id: id },
     { ...req.body },
@@ -134,7 +194,8 @@ const deleteLeague = async (req, res) => {
   }
 
   const deletedLeague = await League.findOneAndRemove({ _id: id });
-  const users = await User.find({ leagueId: id }).lean();
+  let users = await User.find({ leagueId: id }).lean();
+  users = users.filter((u) => u._id.toString() !== userId.toString());
   const requests = await Request.find({ leagueId: id }).lean();
   const leagueInvitations = await LeagueInvitation.find({
     leagueId: id,
@@ -143,6 +204,54 @@ const deleteLeague = async (req, res) => {
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
     const { _id } = user;
+
+    const userToken = await UserToken.findOne({ userId: _id }).lean();
+    if (!userToken) {
+      throw new NotFoundError("User token does not exist!");
+    }
+
+    // Create a new Expo SDK client
+    // optionally providing an access token if you have enabled push security
+    let expo = new Expo();
+
+    // Create the messages that you want to send to clients
+    let messages = [];
+    // Each push token looks like ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
+
+    // Check that all your push tokens appear to be valid Expo push tokens
+    if (!Expo.isExpoPushToken(userToken.token)) {
+      throw new BadRequestError("Invalid expo push token!");
+    }
+
+    // Construct a message (see https://docs.expo.io/push-notifications/sending-notifications/)
+    messages.push({
+      to: userToken.token,
+      sound: "default",
+      body: `${user.firstName + " " + user.lastName} deleted your league!`,
+      data: { withSome: "data" },
+    });
+
+    // The Expo push notification service accepts batches of notifications so
+    // that you don't need to send 1000 requests to send 1000 notifications. We
+    // recommend you batch your notifications to reduce the number of requests
+    // and to compress them (notifications with similar content will get
+    // compressed).
+    let chunks = expo.chunkPushNotifications(messages);
+    let tickets = [];
+    (async () => {
+      // Send the chunks to the Expo push notification service. There are
+      // different strategies you could use. A simple one is to send one chunk at a
+      // time, which nicely spreads the load out over time:
+      for (let chunk of chunks) {
+        let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        console.log(ticketChunk);
+        tickets.push(...ticketChunk);
+        // NOTE: If a ticket contains an error code in ticket.details.error, you
+        // must handle it appropriately. The error codes are listed in the Expo
+        // documentation:
+        // https://docs.expo.io/push-notifications/sending-notifications/#individual-errors
+      }
+    })();
 
     const updatedUser = await User.findOneAndUpdate(
       { _id },
@@ -318,6 +427,57 @@ const leaveLeague = async (req, res) => {
 
   if (userId.toString() === league.creatorId) {
     const bestUser = users.find((u) => u.email !== user.email);
+
+    const userToken = await UserToken.findOne({
+      userId: bestUser._id,
+    }).lean();
+    if (!userToken) {
+      throw new NotFoundError("User token does not exist!");
+    }
+
+    // Create a new Expo SDK client
+    // optionally providing an access token if you have enabled push security
+    let expo = new Expo();
+
+    // Create the messages that you want to send to clients
+    let messages = [];
+    // Each push token looks like ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
+
+    // Check that all your push tokens appear to be valid Expo push tokens
+    if (!Expo.isExpoPushToken(userToken.token)) {
+      throw new BadRequestError("Invalid expo push token!");
+    }
+
+    // Construct a message (see https://docs.expo.io/push-notifications/sending-notifications/)
+    messages.push({
+      to: userToken.token,
+      sound: "default",
+      body: `You are the leader of ${league.name} now!`,
+      data: { withSome: "data" },
+    });
+
+    // The Expo push notification service accepts batches of notifications so
+    // that you don't need to send 1000 requests to send 1000 notifications. We
+    // recommend you batch your notifications to reduce the number of requests
+    // and to compress them (notifications with similar content will get
+    // compressed).
+    let chunks = expo.chunkPushNotifications(messages);
+    let tickets = [];
+    (async () => {
+      // Send the chunks to the Expo push notification service. There are
+      // different strategies you could use. A simple one is to send one chunk at a
+      // time, which nicely spreads the load out over time:
+      for (let chunk of chunks) {
+        let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        console.log(ticketChunk);
+        tickets.push(...ticketChunk);
+        // NOTE: If a ticket contains an error code in ticket.details.error, you
+        // must handle it appropriately. The error codes are listed in the Expo
+        // documentation:
+        // https://docs.expo.io/push-notifications/sending-notifications/#individual-errors
+      }
+    })();
+
     const updatedLeague = await League.findOneAndUpdate(
       { _id: id },
       { creatorId: bestUser._id },
@@ -326,6 +486,56 @@ const leaveLeague = async (req, res) => {
 
     res.status(StatusCodes.OK).json({ updatedUser, updatedLeague });
   }
+
+  const userToken = await UserToken.findOne({
+    userId: league.creatorId,
+  }).lean();
+  if (!userToken) {
+    throw new NotFoundError("User token does not exist!");
+  }
+
+  // Create a new Expo SDK client
+  // optionally providing an access token if you have enabled push security
+  let expo = new Expo();
+
+  // Create the messages that you want to send to clients
+  let messages = [];
+  // Each push token looks like ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
+
+  // Check that all your push tokens appear to be valid Expo push tokens
+  if (!Expo.isExpoPushToken(userToken.token)) {
+    throw new BadRequestError("Invalid expo push token!");
+  }
+
+  // Construct a message (see https://docs.expo.io/push-notifications/sending-notifications/)
+  messages.push({
+    to: userToken.token,
+    sound: "default",
+    body: `${user.firstName + " " + user.lastName} left your league!`,
+    data: { withSome: "data" },
+  });
+
+  // The Expo push notification service accepts batches of notifications so
+  // that you don't need to send 1000 requests to send 1000 notifications. We
+  // recommend you batch your notifications to reduce the number of requests
+  // and to compress them (notifications with similar content will get
+  // compressed).
+  let chunks = expo.chunkPushNotifications(messages);
+  let tickets = [];
+  (async () => {
+    // Send the chunks to the Expo push notification service. There are
+    // different strategies you could use. A simple one is to send one chunk at a
+    // time, which nicely spreads the load out over time:
+    for (let chunk of chunks) {
+      let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+      console.log(ticketChunk);
+      tickets.push(...ticketChunk);
+      // NOTE: If a ticket contains an error code in ticket.details.error, you
+      // must handle it appropriately. The error codes are listed in the Expo
+      // documentation:
+      // https://docs.expo.io/push-notifications/sending-notifications/#individual-errors
+    }
+  })();
 
   res.status(StatusCodes.OK).json({ updatedUser });
 };
@@ -371,6 +581,56 @@ const kickMember = async (req, res) => {
       "The player you want to kick is not from your league!"
     );
   }
+
+  const userToken = await UserToken.findOne({ userId: memberId }).lean();
+  if (!userToken) {
+    throw new NotFoundError("User token does not exist!");
+  }
+
+  // Create a new Expo SDK client
+  // optionally providing an access token if you have enabled push security
+  let expo = new Expo();
+
+  // Create the messages that you want to send to clients
+  let messages = [];
+  // Each push token looks like ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
+
+  // Check that all your push tokens appear to be valid Expo push tokens
+  if (!Expo.isExpoPushToken(userToken.token)) {
+    throw new BadRequestError("Invalid expo push token!");
+  }
+
+  // Construct a message (see https://docs.expo.io/push-notifications/sending-notifications/)
+  messages.push({
+    to: userToken.token,
+    sound: "default",
+    body: `${user.firstName + " " + user.lastName} kicked you from ${
+      league.name
+    }`,
+    data: { withSome: "data" },
+  });
+
+  // The Expo push notification service accepts batches of notifications so
+  // that you don't need to send 1000 requests to send 1000 notifications. We
+  // recommend you batch your notifications to reduce the number of requests
+  // and to compress them (notifications with similar content will get
+  // compressed).
+  let chunks = expo.chunkPushNotifications(messages);
+  let tickets = [];
+  (async () => {
+    // Send the chunks to the Expo push notification service. There are
+    // different strategies you could use. A simple one is to send one chunk at a
+    // time, which nicely spreads the load out over time:
+    for (let chunk of chunks) {
+      let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+      console.log(ticketChunk);
+      tickets.push(...ticketChunk);
+      // NOTE: If a ticket contains an error code in ticket.details.error, you
+      // must handle it appropriately. The error codes are listed in the Expo
+      // documentation:
+      // https://docs.expo.io/push-notifications/sending-notifications/#individual-errors
+    }
+  })();
 
   const updatedUser = await User.findOneAndUpdate(
     { _id: memberId },
