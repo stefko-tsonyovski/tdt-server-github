@@ -74,6 +74,7 @@ const getAllPlayers = async (req, res) => {
   }
 
   let players = await Player.find({}).sort("ranking").lean();
+  players = players.filter(p => p.id > 0);
 
   const userPlayers = await UserPlayer.find({
     weekId: selected.value,
