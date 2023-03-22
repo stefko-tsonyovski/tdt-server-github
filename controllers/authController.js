@@ -8,7 +8,6 @@ const {
   attachCookiesToResponse,
   createTokenUser,
   sendResetPasswordEmail,
-  sendVerificationEmail,
   createHash,
 } = require("../utils");
 const crypto = require("crypto");
@@ -54,23 +53,17 @@ const register = async (req, res) => {
   }
 
   const invitation = await Invitation.findOne({
-    receiverEmail: user.email,
+    receiverEmail: email,
   }).lean();
 
   if (invitation) {
     const sender = await User.findOne({ _id: invitation.senderId }).lean();
-    if (!sender) {
-      throw new CustomError.NotFoundError("Sender does not exist!");
+    if (sender) {
+      await User.findByIdAndUpdate(invitation.senderId, {
+        socialPoints: sender.socialPoints + SOCIAL_POINTS,
+      });
     }
-
-    await User.findOneAndUpdate({
-      _id: invitation.senderId,
-      socialPoints: sender.socialPoints + SOCIAL_POINTS,
-    });
   }
-
-  // const tokenUser = createTokenUser(user);
-  // attachCookiesToResponse({ res, user: tokenUser });
 
   res.status(StatusCodes.CREATED).json({
     msg: "Success! Please check your email to verify account",

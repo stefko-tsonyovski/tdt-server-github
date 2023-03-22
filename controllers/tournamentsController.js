@@ -78,12 +78,7 @@ const getTournamentsByDate = async (req, res) => {
           );
         })
         .map((match) => {
-          if (
-            favorites.some(
-              (favorite) =>
-                favorite.matchId === match.id && favorite.userId === user._id
-            )
-          ) {
+          if (favorites.some((favorite) => favorite.matchId === match.id)) {
             favoritesCount++;
           }
 
