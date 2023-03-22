@@ -8,9 +8,11 @@ const { NotFoundError, BadRequestError } = require("../errors");
 const User = require("../models/User");
 
 const sendInvitation = async (req, res) => {
-  const { receiver: receiverEmail } = req.body;
-  const { userId } = req.user;
-  const sender = await User.findOne({ _id: userId }).lean();
+  const { receiverEmail, senderEmail } = req.body;
+  console.log(receiverEmail);
+  console.log(senderEmail);
+
+  const sender = await User.findOne({ email: senderEmail }).lean();
 
   if (!receiverEmail) {
     throw new BadRequestError("Please provide valid email.");
@@ -20,6 +22,7 @@ const sendInvitation = async (req, res) => {
     const invitationExists = await Invitation.findOne({
       receiverEmail,
     });
+
     if (invitationExists) {
       throw new BadRequestError(
         `Player with email: ${receiverEmail} has been already invited to the game!`
@@ -32,11 +35,12 @@ const sendInvitation = async (req, res) => {
 
     await sendInvitationEmail({
       email: receiverEmail,
-      origin: "https://tennisdreamteam-xqsa.onrender.com",
+      origin:
+        "https://play.google.com/store/apps/details?id=com.stefkonoisyboy.TennisDreamTeam&pli=1",
     });
 
     await Invitation.create({
-      senderId: userId,
+      senderId: sender._id,
       receiverEmail,
     });
   }
@@ -65,33 +69,7 @@ const verifyInvitation = async (req, res) => {
   res.status(StatusCodes.OK).send();
 };
 
-const getAllSendedInvitations = async (req, res) => {
-  const { userId } = req.user;
-
-  const invitations = await Invitation.find({ senderId: userId }).lean();
-
-  res.status(StatusCodes.OK).json({ invitations });
-};
-
-const getAllReceivedInvitations = async (req, res) => {
-  const { userId } = req.user;
-
-  const receiver = await User.findOne({ _id: userId }).lean();
-
-  if (!receiver) {
-    throw new NotFoundError("Not found error");
-  }
-
-  const invitations = await Invitation.find({
-    receiverEmail: receiver.email,
-  }).lean();
-
-  res.status(StatusCodes.OK).json({ invitations });
-};
-
 module.exports = {
   sendInvitation,
   verifyInvitation,
-  getAllSendedInvitations,
-  getAllReceivedInvitations,
 };
