@@ -183,17 +183,48 @@ const updateBracket = async (req, res) => {
 
   const matches = await Match.find({}).sort("id").lean();
 
-  const match = await Match.create({
-    id: matches.length ? matches[matches.length - 1].id + 1 : 1,
-    status: "pending",
-    homeId: homePlayer.id,
-    awayId: awayPlayer.id,
-    date,
-    tournamentId: tournament.id,
-    roundId: round._id,
-  });
+  if (
+    matches.some(
+      (m) =>
+        m.tournamentId === tournament.id &&
+        m.roundId === round._id.toString() &&
+        (m.homeId === homePlayer.id || m.awayId === awayPlayer.id)
+    )
+  ) {
+    const existingMatch = matches.find(
+      (m) =>
+        m.tournamentId === tournament.id &&
+        m.roundId === round._id.toString() &&
+        (m.homeId === homePlayer.id || m.awayId === awayPlayer.id)
+    );
 
-  res.status(StatusCodes.OK).json({ bracket, match });
+    const match = await Match.findOneAndUpdate(
+      { id: existingMatch.id },
+      {
+        status: "pending",
+        homeId: homePlayer.id,
+        awayId: awayPlayer.id,
+        date,
+        tournamentId: tournament.id,
+        roundId: round._id,
+      },
+      { runValidators: true, new: true }
+    );
+    console.log("Match updated!");
+    res.status(StatusCodes.OK).json({ bracket, match });
+  } else {
+    const match = await Match.create({
+      id: matches.length ? matches[matches.length - 1].id + 1 : 1,
+      status: "pending",
+      homeId: homePlayer.id,
+      awayId: awayPlayer.id,
+      date,
+      tournamentId: tournament.id,
+      roundId: round._id,
+    });
+    console.log("Match created!");
+    res.status(StatusCodes.OK).json({ bracket, match });
+  }
 };
 
 const updateFinishedBracket = async (req, res) => {

@@ -39,6 +39,7 @@ const requestsRoute = require("./routes/requestsRoute");
 const leagueInvitationsRoute = require("./routes/leagueInvitationsRouter");
 const predictionsRoute = require("./routes/predictionsRoute");
 const searchesRoute = require("./routes/searchesRoute");
+const userTokensRoute = require("./routes/userTokensRoute");
 
 // error handler
 const notFoundMiddleware = require("./middleware/not-found");
@@ -81,6 +82,7 @@ app.use("/api/v1/requests", requestsRoute);
 app.use("/api/v1/leagueInvitations", leagueInvitationsRoute);
 app.use("/api/v1/predictions", predictionsRoute);
 app.use("/api/v1", searchesRoute);
+app.use("/api/v1/userTokens", userTokensRoute);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
