@@ -89,7 +89,7 @@ const createInvitation = async (req, res) => {
     throw new BadRequestError("This player is already in your league!");
   }
 
-  const userToken = await UserToken.findOne({ userId }).lean();
+  const userToken = await UserToken.findOne({ userId: receiverId }).lean();
   if (!userToken) {
     throw new NotFoundError("User token does not exist!");
   }
