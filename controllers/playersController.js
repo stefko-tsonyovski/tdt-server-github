@@ -74,7 +74,7 @@ const getAllPlayers = async (req, res) => {
   }
 
   let players = await Player.find({}).sort("ranking").lean();
-  players = players.filter(p => p.id > 0);
+  players = players.filter((p) => p.id > 0);
 
   const userPlayers = await UserPlayer.find({
     weekId: selected.value,
@@ -624,13 +624,29 @@ const calculatePointsForUserPlayers = async (req, res) => {
       status: "finished",
     }).lean();
 
-    homeMatches = homeMatches.filter(
-      (m) => !userMatchPlayers.some((ump) => ump.matchId === m.id)
-    );
+    homeMatches = homeMatches.filter(async (m) => {
+      const tournament = await Tournament.findOne({
+        id: m.tournamentId,
+      }).lean();
+      return (
+        !userMatchPlayers.some((ump) => ump.matchId === m.id) &&
+        m.homeId > 0 &&
+        m.awayId > 0 &&
+        tournament.weekId === week._id
+      );
+    });
 
-    awayMatches = awayMatches.filter(
-      (m) => !userMatchPlayers.some((ump) => ump.matchId === m.id)
-    );
+    awayMatches = awayMatches.filter(async (m) => {
+      const tournament = await Tournament.findOne({
+        id: m.tournamentId,
+      }).lean();
+      return (
+        !userMatchPlayers.some((ump) => ump.matchId === m.id) &&
+        m.homeId > 0 &&
+        m.awayId > 0 &&
+        tournament.weekId === week._id
+      );
+    });
 
     let homePoints = 0;
     let awayPoints = 0;
