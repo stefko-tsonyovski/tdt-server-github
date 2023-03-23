@@ -181,7 +181,7 @@ const deleteLeague = async (req, res) => {
     throw new NotFoundError("User does not exist!");
   }
 
-  const { _id: userId } = user;
+  const { _id: userId, firstName, lastName } = user;
 
   const league = await League.findOne({ _id: id }).lean();
 
@@ -227,7 +227,7 @@ const deleteLeague = async (req, res) => {
     messages.push({
       to: userToken.token,
       sound: "default",
-      body: `${user.firstName + " " + user.lastName} deleted your league!`,
+      body: `${firstName + " " + lastName} deleted your league!`,
       data: { withSome: "data" },
     });
 
