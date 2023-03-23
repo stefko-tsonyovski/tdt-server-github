@@ -603,6 +603,8 @@ const calculatePointsForUserPlayers = async (req, res) => {
   }).lean();
   let weeklyPoints = 0;
 
+  const currentTournaments = await Tournament.find({ weekId }).lean();
+
   for (let i = 0; i < userPlayers.length; i++) {
     const userPlayer = userPlayers[i];
     const { _id, balls, playerId, pointsWon } = userPlayer;
@@ -613,38 +615,28 @@ const calculatePointsForUserPlayers = async (req, res) => {
     }).lean();
 
     let homeMatches = await Match.find({
-      homeId: userPlayer.playerId,
+      homeId: playerId,
       round: "n/a",
       status: "finished",
     }).lean();
 
     let awayMatches = await Match.find({
-      awayId: userPlayer.playerId,
+      awayId: playerId,
       round: "n/a",
       status: "finished",
     }).lean();
 
-    homeMatches = homeMatches.filter(async (m) => {
-      const tournament = await Tournament.findOne({
-        id: m.tournamentId,
-      }).lean();
+    homeMatches = homeMatches.filter((m) => {
       return (
         !userMatchPlayers.some((ump) => ump.matchId === m.id) &&
-        m.homeId > 0 &&
-        m.awayId > 0 &&
-        tournament.weekId === week._id
+        currentTournaments.some((t) => t.id === m.tournamentId)
       );
     });
 
-    awayMatches = awayMatches.filter(async (m) => {
-      const tournament = await Tournament.findOne({
-        id: m.tournamentId,
-      }).lean();
+    awayMatches = awayMatches.filter((m) => {
       return (
         !userMatchPlayers.some((ump) => ump.matchId === m.id) &&
-        m.homeId > 0 &&
-        m.awayId > 0 &&
-        tournament.weekId === week._id
+        currentTournaments.some((t) => t.id === m.tournamentId)
       );
     });
 
@@ -761,15 +753,15 @@ const calculatePointsForUserPlayers = async (req, res) => {
 
     const totalPoints = (homePoints + awayPoints) * balls;
     weeklyPoints += totalPoints;
-
     await UserPlayer.findOneAndUpdate(
       { _id },
       { pointsWon: totalPoints + pointsWon },
-      { runValidators: true }
+      { runValidators: true, new: true }
     );
   }
 
   const userWeek = await UserWeek.findOne({ userId, weekId }).lean();
+
   if (!userWeek) {
     throw new NotFoundError("User week does not exist!");
   }
