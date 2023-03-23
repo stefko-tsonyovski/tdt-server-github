@@ -1,5 +1,5 @@
 const { StatusCodes } = require("http-status-codes");
-const sendInvitationEmail = require("../utils/sendInvitationEmail");
+const sendInvitationEmail = require("../utils/sendInvitationEmail.js");
 const { Expo } = require("expo-server-sdk");
 
 const SOCIAL_POINTS = 5;
@@ -56,9 +56,13 @@ const verifyInvitation = async (req, res) => {
   if (invitation) {
     const sender = await User.findOne({ _id: invitation.senderId }).lean();
     if (sender) {
-      invitation.verified = true;
       let result = sender.socialPoints;
       result += SOCIAL_POINTS;
+
+      await Invitation.findByIdAndUpdate(invitation._id, {
+        verified: true,
+      });
+      await User.findById(invitation.senderId, { socialPoints: result });
 
       const userToken = await UserToken.findOne({ userId: sender._id }).lean();
       if (!userToken) {
@@ -108,11 +112,6 @@ const verifyInvitation = async (req, res) => {
           // https://docs.expo.io/push-notifications/sending-notifications/#individual-errors
         }
       })();
-
-      await User.findOneAndUpdate(
-        { _id: invitation.senderId },
-        { socialPoints: result }
-      );
     }
   }
 
