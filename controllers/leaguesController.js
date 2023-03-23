@@ -288,7 +288,13 @@ const deleteLeague = async (req, res) => {
     }
   }
 
-  res.status(StatusCodes.OK).json({ deletedLeague });
+  const updatedUser = await User.findOneAndUpdate(
+    { email },
+    { leagueId: "" },
+    { runValidators: true, new: true }
+  );
+
+  res.status(StatusCodes.OK).json({ deletedLeague, updatedUser });
 };
 
 const leaveLeague = async (req, res) => {

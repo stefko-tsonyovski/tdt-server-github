@@ -17,9 +17,14 @@ const subscribeForPushNotifications = async (req, res) => {
   if (!existingUserToken) {
     const userToken = await UserToken.create({ userId: user._id, token });
     res.status(StatusCodes.CREATED).json({ userToken });
+  } else {
+    const updatedUserToken = await UserToken.findOneAndUpdate(
+      { _id: existingUserToken._id },
+      { token },
+      { runValidators: true, new: true }
+    );
+    res.status(StatusCodes.OK).json({ updatedUserToken });
   }
-
-  res.status(StatusCodes.OK).json({ msg: "Token exists!" });
 };
 
 module.exports = {
