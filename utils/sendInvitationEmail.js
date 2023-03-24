@@ -4,7 +4,10 @@ const fs = require("fs");
 const path = require("path");
 
 const sendInvitationEmail = async ({ email, origin }) => {
-  let templatePath = path.resolve("invitation-email-template.html");
+  let templatePath = path.resolve(
+    __dirname,
+    "../invitation-email-template.html"
+  );
 
   const html = fs.readFileSync(templatePath).toString();
   // const message = `<p>Welcome! We are happy to join us in our fantastic game TennisDreamTeam.
