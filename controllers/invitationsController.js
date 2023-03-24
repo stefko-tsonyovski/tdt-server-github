@@ -15,7 +15,13 @@ const sendInvitation = async (req, res) => {
   const sender = await User.findOne({ email: senderEmail }).lean();
 
   if (!receiverEmail) {
-    throw new BadRequestError("Please provide valid email.");
+    throw new BadRequestError("Please provide valid email!");
+  }
+
+  const receiver = await User.findOne({ email: receiverEmail }).lean();
+
+  if (receiver) {
+    throw new BadRequestError("User already exists!");
   }
 
   if (sender) {
@@ -24,13 +30,11 @@ const sendInvitation = async (req, res) => {
     });
 
     if (invitationExists) {
-      throw new BadRequestError(
-        `Player with email: ${receiverEmail} has been already invited to the game!`
-      );
+      throw new BadRequestError(`Already invited to the game!`);
     }
 
     if (sender.email === receiverEmail) {
-      throw new BadRequestError("Cannot send email to yourself");
+      throw new BadRequestError("Cannot send email to yourself!");
     }
 
     await sendInvitationEmail({
